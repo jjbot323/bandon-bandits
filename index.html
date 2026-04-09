@@ -473,6 +473,54 @@
   .caddie-grid tr.caddie-locked .caddie-cell { cursor: default; pointer-events: none; }
   .caddie-grid tr.caddie-active td:first-child { font-weight: 800; color: var(--green); }
   .caddie-grid tr.caddie-active { background: rgba(45,90,39,0.04); }
+
+  /* Commissioner mode */
+  .commish-bar {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-top: 12px; padding: 10px 16px; border-radius: 10px;
+    background: #f9f7f0; border: 1px dashed #ccc; font-size: 0.82em;
+  }
+  .commish-bar.active { background: #fff3e0; border-color: var(--gold); }
+  .commish-btn {
+    padding: 6px 14px; border-radius: 8px; border: 2px solid var(--gold);
+    background: var(--white); color: var(--green-dark); font-weight: 700;
+    font-size: 0.88em; cursor: pointer; transition: all 0.2s;
+  }
+  .commish-btn:hover { background: var(--gold); color: var(--white); }
+  .commish-btn.locked { border-color: var(--red); color: var(--red); }
+  .commish-btn.locked:hover { background: var(--red); color: var(--white); }
+  .commish-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 9999;
+    display: none; align-items: center; justify-content: center;
+  }
+  .commish-modal-overlay.open { display: flex; }
+  .commish-modal {
+    background: var(--white); border-radius: 14px; padding: 30px 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25); max-width: 360px; width: 90%;
+    text-align: center;
+  }
+  .commish-modal h3 { color: var(--green-dark); margin-bottom: 6px; font-size: 1.1em; }
+  .commish-modal p { font-size: 0.85em; color: #666; margin-bottom: 16px; }
+  .commish-modal input {
+    width: 100%; padding: 10px 14px; border: 2px solid #ddd; border-radius: 8px;
+    font-size: 0.95em; text-align: center; letter-spacing: 2px; margin-bottom: 12px;
+  }
+  .commish-modal input:focus { outline: none; border-color: var(--green); }
+  .commish-modal .commish-error { color: var(--red); font-size: 0.82em; margin-bottom: 10px; display: none; }
+  .commish-modal-btns { display: flex; gap: 10px; justify-content: center; }
+  .commish-modal-btns button {
+    padding: 8px 20px; border-radius: 8px; border: none; font-weight: 700;
+    font-size: 0.88em; cursor: pointer;
+  }
+  .commish-modal-btns .commish-submit {
+    background: var(--green); color: var(--white);
+  }
+  .commish-modal-btns .commish-cancel {
+    background: #eee; color: #666;
+  }
+  .caddie-grid tr.commish-editable .caddie-cell { cursor: pointer; pointer-events: auto; }
+  .caddie-grid tr.commish-editable td { opacity: 1; }
   @media (max-width: 700px) {
     .caddie-grid { font-size: 0.72em; }
     .caddie-grid th, .caddie-grid td { padding: 5px 3px; }
@@ -1802,6 +1850,24 @@
         <tbody id="caddieBody"></tbody>
       </table>
       <div class="caddie-sync" id="caddieStatus">Connecting to live database...</div>
+      <div class="commish-bar" id="commishBar">
+        <span id="commishLabel" style="color:#999;">Commissioner Mode</span>
+        <button class="commish-btn" id="commishBtn" onclick="toggleCommish()">Unlock</button>
+      </div>
+
+<!-- Commissioner password modal -->
+<div class="commish-modal-overlay" id="commishModal">
+  <div class="commish-modal">
+    <h3>Commissioner Mode</h3>
+    <p>Enter the commissioner password to edit any player's picks.</p>
+    <input type="password" id="commishPw" placeholder="Password" autocomplete="off">
+    <div class="commish-error" id="commishError">Incorrect password. Try again.</div>
+    <div class="commish-modal-btns">
+      <button class="commish-cancel" onclick="closeCommishModal()">Cancel</button>
+      <button class="commish-submit" onclick="submitCommishPw()">Unlock</button>
+    </div>
+  </div>
+</div>
       <div style="margin-top:1rem; padding:12px 16px; background:#fff8e1; border-left:4px solid var(--gold); border-radius:6px; font-size:0.88em; line-height:1.5;">
         <strong>No caddie? Quick etiquette note:</strong> If you're going without a caddie but getting help from someone else's caddie with lines, reads, etc., proper etiquette is to throw that caddie some bones at the end of the round. Please tip them $20–25 for the assist.
       </div>
@@ -2667,6 +2733,10 @@ function showPage(pageId) {
 
   let data = {};
   let activeUser = '';
+  let commishMode = false;
+  // Simple hash check — not meant to be Fort Knox, just keeps the guys from messing with each other
+  const COMMISH_HASH = 'b141a';
+  function hashPw(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return 'b' + Math.abs(h).toString(16).slice(0,4); }
   PLAYERS.forEach(p => { data[p] = {}; ROUNDS.forEach(r => { data[p][r] = ''; }); });
 
   // Sanitize values from Firebase - only allow known options
@@ -2698,14 +2768,22 @@ function showPage(pageId) {
       let playerCost = 0;
       const isActive = (p === activeUser);
       const isLocked = (activeUser && !isActive);
-      const rowClass = isActive ? ' class="caddie-active"' : (isLocked ? ' class="caddie-locked"' : '');
+      const canEdit = isActive || commishMode;
+      let rowClass = '';
+      if (commishMode) {
+        rowClass = ' class="commish-editable"';
+      } else if (isActive) {
+        rowClass = ' class="caddie-active"';
+      } else if (isLocked) {
+        rowClass = ' class="caddie-locked"';
+      }
       html += '<tr' + rowClass + '><td>' + p + '</td>';
       ROUNDS.forEach(r => {
         const val = (data[p] && data[p][r]) || '';
         const cls = CSS[val] || CSS[''];
-        const lbl = LABELS[val] || (isActive ? 'Tap' : '-');
+        const lbl = LABELS[val] || (canEdit ? 'Tap' : '-');
         playerCost += COSTS[val] || 0;
-        if (isActive) {
+        if (canEdit) {
           html += '<td><div class="caddie-cell" onclick="cycleCell(\'' + playerKey(p) + '\',\'' + r + '\')">';
           html += '<span class="' + cls + '">' + lbl + '</span></div></td>';
         } else {
@@ -2721,7 +2799,8 @@ function showPage(pageId) {
   // Cycle through options on click
   window.cycleCell = function(pKey, round) {
     const name = PLAYERS.find(p => playerKey(p) === pKey);
-    if (!name || name !== activeUser) return;
+    if (!name) return;
+    if (!commishMode && name !== activeUser) return;
     const current = (data[name] && data[name][round]) || '';
     const idx = OPTIONS.indexOf(current);
     const next = OPTIONS[(idx + 1) % OPTIONS.length];
@@ -2775,6 +2854,59 @@ function showPage(pageId) {
     });
 
   renderGrid();
+
+  // Commissioner mode functions
+  window.toggleCommish = function() {
+    if (commishMode) {
+      // Lock it back down
+      commishMode = false;
+      document.getElementById('commishBar').classList.remove('active');
+      document.getElementById('commishBtn').textContent = 'Unlock';
+      document.getElementById('commishBtn').classList.remove('locked');
+      document.getElementById('commishLabel').textContent = 'Commissioner Mode';
+      document.getElementById('commishLabel').style.color = '#999';
+      renderGrid();
+    } else {
+      // Show password modal
+      document.getElementById('commishModal').classList.add('open');
+      document.getElementById('commishPw').value = '';
+      document.getElementById('commishError').style.display = 'none';
+      setTimeout(function() { document.getElementById('commishPw').focus(); }, 100);
+    }
+  };
+
+  window.closeCommishModal = function() {
+    document.getElementById('commishModal').classList.remove('open');
+    document.getElementById('commishPw').value = '';
+    document.getElementById('commishError').style.display = 'none';
+  };
+
+  window.submitCommishPw = function() {
+    const pw = document.getElementById('commishPw').value;
+    if (hashPw(pw) === COMMISH_HASH) {
+      commishMode = true;
+      document.getElementById('commishModal').classList.remove('open');
+      document.getElementById('commishBar').classList.add('active');
+      document.getElementById('commishBtn').textContent = 'Lock';
+      document.getElementById('commishBtn').classList.add('locked');
+      document.getElementById('commishLabel').textContent = 'Commissioner Mode Active — editing all players';
+      document.getElementById('commishLabel').style.color = '#e65100';
+      renderGrid();
+    } else {
+      document.getElementById('commishError').style.display = 'block';
+      document.getElementById('commishPw').value = '';
+      document.getElementById('commishPw').focus();
+    }
+  };
+
+  // Enter key submits password, Escape closes modal
+  document.getElementById('commishPw').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitCommishPw(); }
+    if (e.key === 'Escape') { e.preventDefault(); closeCommishModal(); }
+  });
+  document.getElementById('commishModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCommishModal();
+  });
 })();
 
 // ===== TRASH TALK CHAT (Firebase Realtime Database) =====
