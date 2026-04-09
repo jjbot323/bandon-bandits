@@ -747,6 +747,52 @@
   :root[data-theme="dark"] .commish-bar { background: #252538; border-color: #444; }
   :root[data-theme="dark"] .commish-bar.active { background: #3d2e0a; border-color: var(--gold); }
 
+  /* Dark mode: fix hardcoded text colors */
+  :root[data-theme="dark"] .stat-value { color: var(--text); }
+  :root[data-theme="dark"] .modal-section p,
+  :root[data-theme="dark"] .modal-section li { color: #ccc; }
+  :root[data-theme="dark"] .hole-tip span,
+  :root[data-theme="dark"] .cd-section li,
+  :root[data-theme="dark"] .cd-tip span,
+  :root[data-theme="dark"] .cd-signature p { color: #bbb; }
+  :root[data-theme="dark"] .commish-modal p { color: #bbb; }
+  :root[data-theme="dark"] .commish-modal-btns .commish-cancel { background: #353548; color: #ccc; }
+
+  /* Dark mode: fix hardcoded inline backgrounds via attribute selectors */
+  :root[data-theme="dark"] [style*="background:#fff8e1"],
+  :root[data-theme="dark"] [style*="background:#e8f5e9"] {
+    background: #252538 !important; border-left-color: var(--gold);
+  }
+  :root[data-theme="dark"] [style*="background: linear-gradient(135deg, #e8dfc8"] {
+    background: linear-gradient(135deg, #2a2a3e, #353548) !important;
+  }
+  :root[data-theme="dark"] [style*="color: #555"],
+  :root[data-theme="dark"] [style*="color:#555"] { color: #bbb !important; }
+  :root[data-theme="dark"] [style*="color:#999"] { color: #888 !important; }
+  :root[data-theme="dark"] [style*="color:#aaa"] { color: #888 !important; }
+
+  /* Dark mode: fix hardcoded borders */
+  :root[data-theme="dark"] [style*="border-bottom:1px solid #eee"],
+  :root[data-theme="dark"] [style*="border-top:2px solid #eee"] {
+    border-color: #444 !important;
+  }
+  :root[data-theme="dark"] [style*="border:1px solid #ddd"],
+  :root[data-theme="dark"] [style*="border:2px solid #ddd"] {
+    border-color: #444 !important;
+  }
+
+  /* Dark mode: misc inline overrides */
+  :root[data-theme="dark"] .caddie-who select { background: #353548; color: #e0e0e0; }
+  :root[data-theme="dark"] .caddie-sync { color: #666; }
+  :root[data-theme="dark"] .caddie-cost-legend { color: #ccc; }
+  :root[data-theme="dark"] .round-row { color: var(--text); }
+  :root[data-theme="dark"] .scoring-note { color: #ccc; }
+  :root[data-theme="dark"] .day-title { color: var(--gold); }
+  :root[data-theme="dark"] .modal-close { color: #ddd; }
+  :root[data-theme="dark"] .modal-close:hover { color: #fff; }
+  :root[data-theme="dark"] .badge-gold { color: #1a1a2e; }
+  :root[data-theme="dark"] .dinner-card { border-color: #444; }
+
   /* Dark mode toggle & notification toggle */
   .nav-tools { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; padding-right: 4px; }
   .nav-tool-btn {
