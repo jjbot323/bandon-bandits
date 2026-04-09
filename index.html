@@ -22,6 +22,18 @@
     --text: #2c3e50;
     --white: #ffffff;
   }
+  :root[data-theme="dark"] {
+    --green: #3a7a32;
+    --green-light: #4a9a42;
+    --green-dark: #a8d5a2;
+    --sand: #1a1a2e;
+    --sand-dark: #16213e;
+    --gold: #d4af37;
+    --red: #e74c3c;
+    --blue: #5dade2;
+    --text: #e0e0e0;
+    --white: #2c2c3a;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { overflow-x: hidden; max-width: 100vw; }
   body { max-width: 100vw; }
@@ -29,6 +41,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--sand);
     color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
     line-height: 1.5;
   }
   .header {
@@ -704,6 +717,76 @@
     body { background: white; }
     .card { box-shadow: none; border: 1px solid #ddd; }
     .header { background: var(--green-dark) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    :root[data-theme="dark"] { --sand: #f5f0e1; --text: #2c3e50; --white: #ffffff; --green-dark: #1e3d1a; }
+  }
+
+  /* Dark mode overrides for hardcoded colors */
+  :root[data-theme="dark"] th { background: var(--sand-dark); }
+  :root[data-theme="dark"] tr:hover td { background: rgba(255,255,255,0.04); }
+  :root[data-theme="dark"] td { border-bottom-color: #333; }
+  :root[data-theme="dark"] .stat-row { border-bottom-color: #333; }
+  :root[data-theme="dark"] .stat-label { color: #aaa; }
+  :root[data-theme="dark"] .page-nav { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  :root[data-theme="dark"] .page-nav-btn { color: #999; }
+  :root[data-theme="dark"] .page-nav-btn:hover { background: rgba(255,255,255,0.05); }
+  :root[data-theme="dark"] .page-nav-btn.active { color: var(--gold); }
+  :root[data-theme="dark"] .modal { background: var(--white); }
+  :root[data-theme="dark"] .modal-body { background: var(--white); color: var(--text); }
+  :root[data-theme="dark"] input, :root[data-theme="dark"] select {
+    background: #353548; color: #e0e0e0; border-color: #444;
+  }
+  :root[data-theme="dark"] .card { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+  :root[data-theme="dark"] .caddie-val-none { background: #353548; color: #888; }
+  :root[data-theme="dark"] .caddie-val-cart { background: #3d2e0a; color: #ffb74d; }
+  :root[data-theme="dark"] .caddie-val-fore { background: #1b3a1b; color: #66bb6a; }
+  :root[data-theme="dark"] .caddie-val-carry { background: #0d2744; color: #64b5f6; }
+  :root[data-theme="dark"] .commish-bar { background: #252538; border-color: #444; }
+  :root[data-theme="dark"] .commish-bar.active { background: #3d2e0a; border-color: var(--gold); }
+
+  /* Dark mode toggle & notification toggle */
+  .nav-tools { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; padding-right: 4px; }
+  .nav-tool-btn {
+    background: none; border: 2px solid var(--gold); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; font-size: 0.78em; font-weight: 700;
+    color: var(--gold); transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-tool-btn:hover { background: var(--gold); color: #1e3d1a; }
+  .nav-tool-btn.active { background: var(--gold); color: #1e3d1a; }
+
+  /* Image/GIF embeds in trash talk */
+  .tt-embed-img {
+    max-width: 300px; max-height: 300px; border-radius: 8px;
+    margin-top: 6px; cursor: pointer; display: block;
+    transition: transform 0.15s;
+  }
+  .tt-embed-img:hover { transform: scale(1.02); }
+  .tt-lightbox {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9); z-index: 2000;
+    justify-content: center; align-items: center; cursor: pointer;
+  }
+  .tt-lightbox.active { display: flex; }
+  .tt-lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+
+  /* @Mention styles */
+  .tt-mention {
+    background: rgba(45, 90, 39, 0.15); color: var(--green-dark);
+    font-weight: 700; padding: 1px 4px; border-radius: 4px;
+  }
+  :root[data-theme="dark"] .tt-mention { background: rgba(58, 122, 50, 0.3); }
+  .tt-mention-dropdown {
+    position: absolute; bottom: 100%; left: 20px; right: 20px;
+    background: var(--white); border: 1px solid #ddd; border-radius: 8px;
+    max-height: 200px; overflow-y: auto; display: none;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 50;
+  }
+  .tt-mention-dropdown.active { display: block; }
+  .tt-mention-item {
+    padding: 8px 14px; cursor: pointer; font-size: 0.88em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tt-mention-item:hover, .tt-mention-item.selected {
+    background: var(--sand); color: var(--green-dark); font-weight: 700;
   }
 </style>
 </head>
@@ -728,6 +811,10 @@
     <button class="page-nav-btn" onclick="showPage('payments')">Payments</button>
     <button class="page-nav-btn" onclick="showPage('packing')">Packing List</button>
     <button class="page-nav-btn" onclick="showPage('trashtalk')">Trash Talk <span style="background: var(--red); color: white; font-size: 0.6em; font-weight: 800; padding: 2px 5px; border-radius: 6px; letter-spacing: 0.5px; vertical-align: middle; margin-left: 4px;">NEW</span></button>
+    <div class="nav-tools">
+      <button class="nav-tool-btn" id="notifToggle" onclick="toggleNotifications()">Notify</button>
+      <button class="nav-tool-btn" id="darkModeToggle" onclick="toggleDarkMode()">Dark</button>
+    </div>
   </div>
 </nav>
 
@@ -2000,19 +2087,20 @@
     <div class="card-header red">Trash Talk Forum</div>
     <div class="card-body" style="padding:0;">
       <!-- Name selector -->
-      <div style="padding:14px 20px; background:#f9f7f0; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px;">
+      <div style="padding:14px 20px; background:var(--sand-dark); border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px;">
         <label style="font-weight:700; font-size:0.85em; color:var(--green-dark);">Posting as:</label>
         <select id="ttName" style="padding:6px 12px; border-radius:6px; border:1px solid #ddd; font-size:0.9em; font-family:inherit;">
           <option value="">Select your name</option>
         </select>
       </div>
       <!-- Messages area -->
-      <div id="ttMessages" style="height:450px; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:10px; background:#fafaf5;">
+      <div id="ttMessages" style="height:450px; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:10px; background:var(--sand);">
         <div style="text-align:center; color:#aaa; font-size:0.85em; padding:40px 0;">Loading messages...</div>
       </div>
       <!-- Input area -->
-      <div style="padding:12px 20px; border-top:2px solid #eee; display:flex; gap:10px; background:#fff;">
-        <input type="text" id="ttInput" placeholder="Talk your trash..." style="flex:1; padding:10px 14px; border:2px solid #ddd; border-radius:8px; font-size:0.92em; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='#ddd'">
+      <div style="padding:12px 20px; border-top:2px solid #eee; display:flex; gap:10px; background:var(--white); position:relative;">
+        <div id="ttMentionDropdown" class="tt-mention-dropdown"></div>
+        <input type="text" id="ttInput" placeholder="Talk your trash... (@ to mention)" style="flex:1; padding:10px 14px; border:2px solid #ddd; border-radius:8px; font-size:0.92em; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='#ddd'">
         <button id="ttSend" onclick="sendTrashTalk()" style="padding:10px 24px; background:var(--red); color:white; border:none; border-radius:8px; font-weight:700; font-size:0.9em; cursor:pointer; font-family:inherit; transition:background 0.2s; letter-spacing:0.3px;" onmouseover="this.style.background='#a93226'" onmouseout="this.style.background='var(--red)'">Send</button>
       </div>
     </div>
@@ -2055,6 +2143,105 @@
 </div>
 
 <script>
+// ===== DARK MODE =====
+(function() {
+  var KEY = 'bandon_dark_mode';
+  function applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    var btn = document.getElementById('darkModeToggle');
+    if (btn) {
+      btn.textContent = dark ? 'Light' : 'Dark';
+      btn.classList.toggle('active', dark);
+    }
+  }
+  window.toggleDarkMode = function() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    localStorage.setItem(KEY, !isDark);
+    applyTheme(!isDark);
+  };
+  if (localStorage.getItem(KEY) === 'true') applyTheme(true);
+})();
+
+// ===== BROWSER NOTIFICATIONS =====
+(function() {
+  var NOTIF_KEY = 'bandon_notif_enabled';
+  var notifEnabled = localStorage.getItem(NOTIF_KEY) === 'true';
+  var lastChatKeys = null;
+  var lastCaddieSnapshot = null;
+
+  function updateBtn() {
+    var btn = document.getElementById('notifToggle');
+    if (!btn) return;
+    btn.classList.toggle('active', notifEnabled);
+    btn.textContent = notifEnabled ? 'Notify On' : 'Notify';
+  }
+
+  window.toggleNotifications = function() {
+    if (!notifEnabled) {
+      if (!('Notification' in window)) { alert('Notifications not supported in this browser.'); return; }
+      Notification.requestPermission().then(function(perm) {
+        if (perm === 'granted') {
+          notifEnabled = true;
+          localStorage.setItem(NOTIF_KEY, 'true');
+          updateBtn();
+        }
+      });
+    } else {
+      notifEnabled = false;
+      localStorage.setItem(NOTIF_KEY, 'false');
+      updateBtn();
+    }
+  };
+
+  window._notifCheckChat = function(messages) {
+    if (!messages) { lastChatKeys = new Set(); return; }
+    var currentKeys = new Set(Object.keys(messages));
+    if (lastChatKeys === null) { lastChatKeys = currentKeys; return; }
+    if (!notifEnabled) { lastChatKeys = currentKeys; return; }
+    var myName = (document.getElementById('ttName') || {}).value;
+    currentKeys.forEach(function(k) {
+      if (!lastChatKeys.has(k)) {
+        var msg = messages[k];
+        if (msg.name === myName) return;
+        var body = (msg.text || '').substring(0, 100);
+        if (myName && msg.text && msg.text.indexOf('@' + myName) !== -1) {
+          new Notification(msg.name + ' mentioned you', { body: body, tag: 'tt-mention-' + k });
+        } else {
+          new Notification(msg.name + ' in Trash Talk', { body: body, tag: 'tt-' + k });
+        }
+      }
+    });
+    lastChatKeys = currentKeys;
+  };
+
+  window._notifCheckCaddie = function(fbData, PLAYERS, ROUNDS, playerKey) {
+    if (!lastCaddieSnapshot) { lastCaddieSnapshot = JSON.stringify(fbData); return; }
+    if (!notifEnabled) { lastCaddieSnapshot = JSON.stringify(fbData); return; }
+    var old = JSON.parse(lastCaddieSnapshot);
+    var myName = localStorage.getItem('bandon_caddie_user');
+    var LABELS = { '': 'None', 'cart': 'No Caddie', 'fore': 'Forecaddie', 'carry': 'Carry Caddie' };
+    PLAYERS.forEach(function(p) {
+      var key = playerKey(p);
+      ROUNDS.forEach(function(r) {
+        var oldVal = (old && old[key] && old[key][r]) || '';
+        var newVal = (fbData && fbData[key] && fbData[key][r]) || '';
+        if (oldVal !== newVal && p !== myName) {
+          new Notification('Caddie Pick Changed', {
+            body: p + ' changed Rd ' + r.replace('rd','') + ' to ' + (LABELS[newVal] || newVal),
+            tag: 'caddie-' + key + '-' + r
+          });
+        }
+      });
+    });
+    lastCaddieSnapshot = JSON.stringify(fbData);
+  };
+
+  updateBtn();
+  if (notifEnabled && 'Notification' in window && Notification.permission !== 'granted') {
+    notifEnabled = false; localStorage.setItem(NOTIF_KEY, 'false'); updateBtn();
+  }
+})();
+
 // ===== COUNTDOWN TIMER =====
 (function() {
   const tripDate = new Date('2026-05-01T12:00:00-07:00');
@@ -2834,6 +3021,7 @@ function showPage(pageId) {
         fetch(DB_URL + '/caddie.json')
           .then(r => r.json())
           .then(fbData => {
+            if (window._notifCheckCaddie) window._notifCheckCaddie(fbData, PLAYERS, ROUNDS, playerKey);
             if (fbData) {
               PLAYERS.forEach(p => {
                 const key = playerKey(p);
@@ -2973,6 +3161,28 @@ function showPage(pageId) {
     return div.innerHTML;
   }
 
+  // Render message text with image embeds and @mention highlights
+  function renderMessageText(text) {
+    var escaped = escapeHtml(text);
+    // Replace image/gif URLs with embedded images
+    escaped = escaped.replace(
+      /(https?:\/\/[^\s<]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s<]*)?)/gi,
+      '<br><img class="tt-embed-img" src="$1" loading="lazy" alt="shared image" onclick="openTTLightbox(this.src)" onerror="this.style.display=\'none\'">'
+    );
+    // Highlight @mentions
+    PLAYERS.forEach(function(p) {
+      var eName = escapeHtml(p);
+      var re = new RegExp('@' + eName.replace(/\s+/g, '\\s+'), 'gi');
+      escaped = escaped.replace(re, '<span class="tt-mention">@' + eName + '</span>');
+    });
+    return escaped;
+  }
+
+  window.openTTLightbox = function(src) {
+    document.getElementById('ttLightboxImg').src = src;
+    document.getElementById('ttLightbox').classList.add('active');
+  };
+
   function formatTime(ts) {
     const d = new Date(ts);
     if (isNaN(d.getTime())) return '';
@@ -3002,7 +3212,7 @@ function showPage(pageId) {
             <span style="font-weight:700;font-size:0.88em;color:var(--green-dark);">${escapeHtml(m.name)}</span>
             <span style="font-size:0.72em;color:#aaa;">${formatTime(m.ts)}</span>
           </div>
-          <div style="font-size:0.9em;margin-top:2px;line-height:1.5;">${escapeHtml(m.text)}</div>
+          <div style="font-size:0.9em;margin-top:2px;line-height:1.5;">${renderMessageText(m.text)}</div>
         </div>
       </div>`;
     }).join('');
@@ -3013,7 +3223,10 @@ function showPage(pageId) {
   function loadMessages() {
     fetch(DB_URL + '/chat.json')
       .then(r => r.json())
-      .then(data => renderMessages(data))
+      .then(function(data) {
+        if (window._notifCheckChat) window._notifCheckChat(data);
+        renderMessages(data);
+      })
       .catch(() => { msgBox.innerHTML = '<div style="text-align:center;color:#aaa;padding:40px 0;">Could not load messages.</div>'; });
   }
   loadMessages();
@@ -3038,11 +3251,85 @@ function showPage(pageId) {
     }).catch(() => alert('Failed to send. Try again.'));
   };
 
-  // Enter key to send
-  document.getElementById('ttInput').addEventListener('keydown', function(e) {
+  // ===== @MENTION AUTOCOMPLETE =====
+  var mentionStart = -1, selectedIdx = 0, filteredPlayers = [];
+  var mentionDropdown = document.getElementById('ttMentionDropdown');
+  var ttInput = document.getElementById('ttInput');
+
+  function mentionRender() {
+    mentionDropdown.innerHTML = filteredPlayers.map(function(p, i) {
+      var av = AVATARS[p]
+        ? '<img src="' + AVATARS[p] + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">'
+        : '';
+      return '<div class="tt-mention-item' + (i === selectedIdx ? ' selected' : '') + '" onmousedown="mentionPick(' + i + ')">' + av + '<span>' + escapeHtml(p) + '</span></div>';
+    }).join('');
+    mentionDropdown.classList.add('active');
+  }
+
+  function mentionHide() {
+    mentionDropdown.classList.remove('active');
+    mentionStart = -1;
+    filteredPlayers = [];
+  }
+
+  function mentionNav(dir) {
+    selectedIdx = (selectedIdx + dir + filteredPlayers.length) % filteredPlayers.length;
+    mentionRender();
+  }
+
+  function mentionSelect() {
+    if (filteredPlayers.length === 0) return;
+    var name = filteredPlayers[selectedIdx];
+    var val = ttInput.value;
+    var before = val.substring(0, mentionStart);
+    var after = val.substring(ttInput.selectionStart);
+    ttInput.value = before + '@' + name + ' ' + after;
+    var cursorPos = before.length + name.length + 2;
+    ttInput.setSelectionRange(cursorPos, cursorPos);
+    mentionHide();
+    ttInput.focus();
+  }
+
+  window.mentionPick = function(idx) {
+    selectedIdx = idx;
+    mentionSelect();
+  };
+
+  ttInput.addEventListener('input', function() {
+    var val = this.value;
+    var cursor = this.selectionStart;
+    var before = val.substring(0, cursor);
+    var atIdx = before.lastIndexOf('@');
+    if (atIdx !== -1 && (atIdx === 0 || before[atIdx - 1] === ' ')) {
+      var query = before.substring(atIdx + 1).toLowerCase();
+      filteredPlayers = PLAYERS.filter(function(p) { return p.toLowerCase().indexOf(query) !== -1; });
+      if (filteredPlayers.length > 0 && query.length <= 20) {
+        mentionStart = atIdx;
+        selectedIdx = 0;
+        mentionRender();
+        return;
+      }
+    }
+    mentionHide();
+  });
+
+  // Keydown: mention dropdown navigation takes priority, then Enter to send
+  ttInput.addEventListener('keydown', function(e) {
+    if (mentionDropdown.classList.contains('active')) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); mentionNav(1); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); mentionNav(-1); return; }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); mentionSelect(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); mentionHide(); return; }
+    }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTrashTalk(); }
   });
 })();
 </script>
+
+<!-- Image lightbox overlay -->
+<div id="ttLightbox" class="tt-lightbox" onclick="this.classList.remove('active')">
+  <img id="ttLightboxImg" src="" alt="">
+</div>
+
 </body>
 </html>
