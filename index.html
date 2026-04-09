@@ -816,7 +816,6 @@
     <button class="page-nav-btn" onclick="showPage('packing')">Packing List</button>
     <button class="page-nav-btn" onclick="showPage('trashtalk')">Trash Talk <span style="background: var(--red); color: white; font-size: 0.6em; font-weight: 800; padding: 2px 5px; border-radius: 6px; letter-spacing: 0.5px; vertical-align: middle; margin-left: 4px;">NEW</span></button>
     <div class="nav-tools">
-      <button class="nav-tool-btn" id="notifToggle" onclick="toggleNotifications()">Notify</button>
       <button class="nav-tool-btn" id="darkModeToggle" onclick="toggleDarkMode()">Dark</button>
     </div>
   </div>
@@ -2166,86 +2165,6 @@
   if (localStorage.getItem(KEY) === 'true') applyTheme(true);
 })();
 
-// ===== BROWSER NOTIFICATIONS =====
-(function() {
-  var NOTIF_KEY = 'bandon_notif_enabled';
-  var notifEnabled = localStorage.getItem(NOTIF_KEY) === 'true';
-  var lastChatKeys = null;
-  var lastCaddieSnapshot = null;
-
-  function updateBtn() {
-    var btn = document.getElementById('notifToggle');
-    if (!btn) return;
-    btn.classList.toggle('active', notifEnabled);
-    btn.textContent = notifEnabled ? 'Notify On' : 'Notify';
-  }
-
-  window.toggleNotifications = function() {
-    if (!notifEnabled) {
-      if (!('Notification' in window)) { alert('Notifications not supported in this browser.'); return; }
-      Notification.requestPermission().then(function(perm) {
-        if (perm === 'granted') {
-          notifEnabled = true;
-          localStorage.setItem(NOTIF_KEY, 'true');
-          updateBtn();
-        }
-      });
-    } else {
-      notifEnabled = false;
-      localStorage.setItem(NOTIF_KEY, 'false');
-      updateBtn();
-    }
-  };
-
-  window._notifCheckChat = function(messages) {
-    if (!messages) { lastChatKeys = new Set(); return; }
-    var currentKeys = new Set(Object.keys(messages));
-    if (lastChatKeys === null) { lastChatKeys = currentKeys; return; }
-    if (!notifEnabled) { lastChatKeys = currentKeys; return; }
-    var myName = (document.getElementById('ttName') || {}).value;
-    currentKeys.forEach(function(k) {
-      if (!lastChatKeys.has(k)) {
-        var msg = messages[k];
-        if (msg.name === myName) return;
-        var body = (msg.text || '').substring(0, 100);
-        if (myName && msg.text && msg.text.indexOf('@' + myName) !== -1) {
-          new Notification(msg.name + ' mentioned you', { body: body, tag: 'tt-mention-' + k });
-        } else {
-          new Notification(msg.name + ' in Trash Talk', { body: body, tag: 'tt-' + k });
-        }
-      }
-    });
-    lastChatKeys = currentKeys;
-  };
-
-  window._notifCheckCaddie = function(fbData, PLAYERS, ROUNDS, playerKey) {
-    if (!lastCaddieSnapshot) { lastCaddieSnapshot = JSON.stringify(fbData); return; }
-    if (!notifEnabled) { lastCaddieSnapshot = JSON.stringify(fbData); return; }
-    var old = JSON.parse(lastCaddieSnapshot);
-    var myName = localStorage.getItem('bandon_caddie_user');
-    var LABELS = { '': 'None', 'cart': 'No Caddie', 'fore': 'Forecaddie', 'carry': 'Carry Caddie' };
-    PLAYERS.forEach(function(p) {
-      var key = playerKey(p);
-      ROUNDS.forEach(function(r) {
-        var oldVal = (old && old[key] && old[key][r]) || '';
-        var newVal = (fbData && fbData[key] && fbData[key][r]) || '';
-        if (oldVal !== newVal && p !== myName) {
-          new Notification('Caddie Pick Changed', {
-            body: p + ' changed Rd ' + r.replace('rd','') + ' to ' + (LABELS[newVal] || newVal),
-            tag: 'caddie-' + key + '-' + r
-          });
-        }
-      });
-    });
-    lastCaddieSnapshot = JSON.stringify(fbData);
-  };
-
-  updateBtn();
-  if (notifEnabled && 'Notification' in window && Notification.permission !== 'granted') {
-    notifEnabled = false; localStorage.setItem(NOTIF_KEY, 'false'); updateBtn();
-  }
-})();
-
 // ===== COUNTDOWN TIMER =====
 (function() {
   const tripDate = new Date('2026-05-01T12:00:00-07:00');
@@ -3025,7 +2944,6 @@ function showPage(pageId) {
         fetch(DB_URL + '/caddie.json')
           .then(r => r.json())
           .then(fbData => {
-            if (window._notifCheckCaddie) window._notifCheckCaddie(fbData, PLAYERS, ROUNDS, playerKey);
             if (fbData) {
               PLAYERS.forEach(p => {
                 const key = playerKey(p);
@@ -3228,7 +3146,6 @@ function showPage(pageId) {
     fetch(DB_URL + '/chat.json')
       .then(r => r.json())
       .then(function(data) {
-        if (window._notifCheckChat) window._notifCheckChat(data);
         renderMessages(data);
       })
       .catch(() => { msgBox.innerHTML = '<div style="text-align:center;color:#aaa;padding:40px 0;">Could not load messages.</div>'; });
