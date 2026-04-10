@@ -1335,67 +1335,56 @@
     </div>
   </div>
 
-  <div class="card" style="display: flex; flex-direction: column;">
-    <div class="card-header gold">Dinner Reservations <span style="font-size: 0.7em; opacity: 0.8; margin-left: 10px;">Click for menus</span></div>
-    <div class="card-body" style="flex: 1; display: flex; flex-direction: column; justify-content: space-around;">
-      <div class="dinner-card" onclick="openDinnerModal('preserve')">
-        <div class="dinner-date">May<br><strong>1</strong></div>
-        <div class="dinner-info">
-          <div class="dinner-name">Bandon Preserve</div>
-          <div class="dinner-type">Italian &bull; After Preserve Par-3 round</div>
-          <div class="dinner-click-hint">Click for menu</div>
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="card">
+      <div class="card-header gold">Dinner Reservations <span style="font-size: 0.7em; opacity: 0.8; margin-left: 10px;">Click for menus</span></div>
+      <div class="card-body" style="padding: 10px 16px;">
+        <div class="dinner-card" onclick="openDinnerModal('preserve')" style="padding: 7px 8px;">
+          <div class="dinner-date">May<br><strong>1</strong></div>
+          <div class="dinner-info">
+            <div class="dinner-name">Bandon Preserve</div>
+            <div class="dinner-type">Italian &bull; After Preserve Par-3 round</div>
+          </div>
+          <div class="dinner-time">7:30 PM</div>
         </div>
-        <div class="dinner-time">7:30 PM</div>
-      </div>
-      <div class="dinner-card" onclick="openDinnerModal('pacific-grill')">
-        <div class="dinner-date">May<br><strong>2</strong></div>
-        <div class="dinner-info">
-          <div class="dinner-name">Pacific Grill</div>
-          <div class="dinner-type">Seafood &bull; After Pacific Dunes</div>
-          <div class="dinner-click-hint">Click for menu</div>
+        <div class="dinner-card" onclick="openDinnerModal('pacific-grill')" style="padding: 7px 8px;">
+          <div class="dinner-date">May<br><strong>2</strong></div>
+          <div class="dinner-info">
+            <div class="dinner-name">Pacific Grill</div>
+            <div class="dinner-type">Seafood &bull; After Pacific Dunes</div>
+          </div>
+          <div class="dinner-time">7:30 PM</div>
         </div>
-        <div class="dinner-time">7:30 PM</div>
-      </div>
-      <div class="dinner-card" onclick="openDinnerModal('ghost-tree')">
-        <div class="dinner-date">May<br><strong>3</strong></div>
-        <div class="dinner-info">
-          <div class="dinner-name">Ghost Tree Grill</div>
-          <div class="dinner-type">Steakhouse &bull; After Bandon Dunes (shower first)</div>
-          <div class="dinner-click-hint">Click for menu</div>
+        <div class="dinner-card" onclick="openDinnerModal('ghost-tree')" style="padding: 7px 8px;">
+          <div class="dinner-date">May<br><strong>3</strong></div>
+          <div class="dinner-info">
+            <div class="dinner-name">Ghost Tree Grill</div>
+            <div class="dinner-type">Steakhouse &bull; After Bandon Dunes (shower first)</div>
+          </div>
+          <div class="dinner-time">8:30 PM</div>
         </div>
-        <div class="dinner-time">8:30 PM</div>
-      </div>
-      <div class="dinner-card" onclick="openDinnerModal('mckees')">
-        <div class="dinner-date">May<br><strong>4</strong></div>
-        <div class="dinner-info">
-          <div class="dinner-name">McKee's Pub</div>
-          <div class="dinner-type">Bar / Pub &bull; After Pacific Dunes</div>
-          <div class="dinner-click-hint">Click for menu</div>
+        <div class="dinner-card" onclick="openDinnerModal('mckees')" style="padding: 7px 8px;">
+          <div class="dinner-date">May<br><strong>4</strong></div>
+          <div class="dinner-info">
+            <div class="dinner-name">McKee's Pub</div>
+            <div class="dinner-type">Bar / Pub &bull; After Pacific Dunes</div>
+          </div>
+          <div class="dinner-time">Walk-in</div>
         </div>
-        <div class="dinner-time">Walk-in</div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ===== KNOW BEFORE YOU GO ===== -->
-<div class="full-width" style="margin-top: 25px;">
-  <div class="card">
-    <div class="card-header blue">&#9432;&ensp;Know Before You Go</div>
-    <div class="card-body">
-      <div class="kbyg-grid">
-
-        <div class="kbyg-item">
-          <h4>&#128656; Getting Between Courses</h4>
-          <ul>
-            <li><strong>Shuttles run 24/7</strong> and arrive within 2&ndash;3 minutes of calling.</li>
-            <li>All courses are a <strong>5&ndash;15 minute shuttle ride</strong> from each other.</li>
-            <li>Each tee-time group can call a shuttle independently &mdash; no need to wait for other groups to finish.</li>
-            <li>On double days, plan to <strong>go straight to the next course</strong> and grab lunch there rather than heading back to the room.</li>
-            <li>Drop your bag at the pro shop before teeing off in the AM and grab it after you finish and shuttle to PM course.</li>
-          </ul>
-        </div>
-
+    <div class="card">
+      <div class="card-header blue">&#9432;&ensp;Know Before You Go</div>
+      <div class="card-body" style="padding: 14px 18px;">
+        <h4 style="font-size: 0.92em; color: var(--green-dark); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid var(--gold);">&#128656; Getting Between Courses</h4>
+        <ul style="padding-left: 16px; margin: 0; font-size: 0.85em; color: #555; line-height: 1.6;">
+          <li style="margin-bottom: 4px;"><strong>Shuttles run 24/7</strong> and arrive within 2&ndash;3 minutes of calling.</li>
+          <li style="margin-bottom: 4px;">All courses are a <strong>5&ndash;15 minute shuttle ride</strong> from each other.</li>
+          <li style="margin-bottom: 4px;">Each tee-time group can call a shuttle independently &mdash; no need to wait for other groups to finish.</li>
+          <li style="margin-bottom: 4px;">On double days, plan to <strong>go straight to the next course</strong> and grab lunch there rather than heading back to the room.</li>
+          <li>Drop your bag at the pro shop before teeing off in the AM and grab it after you finish and shuttle to PM course.</li>
+        </ul>
       </div>
     </div>
   </div>
