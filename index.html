@@ -2851,13 +2851,9 @@ function closeDinnerModal() {
 
 // ===== WHAT'S NEW POPUP =====
 (function() {
-  var KEY = 'bandon_whats_new_v20260410c';
-  if (!localStorage.getItem(KEY)) {
-    document.getElementById('whatsNewModal').classList.add('open');
-  }
+  document.getElementById('whatsNewModal').classList.add('open');
   window.dismissWhatsNew = function() {
     document.getElementById('whatsNewModal').classList.remove('open');
-    localStorage.setItem(KEY, '1');
   };
 })();
 
