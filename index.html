@@ -1861,7 +1861,15 @@
   <span style="font-size: 0.85em; color: #555;">Pick your caddie preference below. If more people want carry than we have slots, we'll coordinate.</span>
 </div>
 
-<div id="caddieAlerts"></div>
+<div class="commish-modal-overlay" id="caddieAlertModal">
+  <div class="commish-modal" style="max-width: 480px;">
+    <h3 style="color: #e65100;">&#9888; Caddie Conflict</h3>
+    <div id="caddieAlertBody" style="font-size: 0.88em; line-height: 1.7; color: #555; text-align: left;"></div>
+    <div class="commish-modal-btns" style="margin-top: 16px;">
+      <button class="commish-submit" onclick="dismissCaddieAlert()">Got It</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===================== CADDIE PREFERENCES (LIVE GRID) ===================== -->
 <div class="full-width">
@@ -2874,7 +2882,8 @@ function showPage(pageId) {
     checkCarryAlerts();
   }
 
-  // Check carry caddie counts against allocation and show/hide alerts
+  // Check carry caddie counts against allocation and show modal if conflicts
+  let lastAlertKey = '';
   function checkCarryAlerts() {
     const ROUND_INFO = {
       rd1: { name: 'Rd 1 — Old Macdonald (Sat AM)', max: 2, session: 'AM' },
@@ -2885,7 +2894,8 @@ function showPage(pageId) {
       rd6: { name: 'Rd 6 — Pacific Dunes (Mon PM)', max: 4, session: 'PM' }
     };
     const SHORT = { 'Alec Bove':'Alec B', 'Ben Harrison':'Ben H', 'Brady Gayle':'Brady G', 'Cain Cody':'Cain C', 'Camden Cooper':'Camden C', 'Collin Horner':'Collin H', 'Harrison Hancock':'Harrison H', 'John Armes':'John A', 'John Gressett':'John G', 'Josh John':'Josh J', 'Stephen Wheatcroft':'Stephen W', 'Will Hayward':'Will H' };
-    let alertsHtml = '';
+    let alerts = [];
+    let alertKey = '';
     ROUNDS.forEach(rd => {
       const info = ROUND_INFO[rd];
       const carryPlayers = PLAYERS.filter(p => data[p] && data[p][rd] === 'carry');
@@ -2893,15 +2903,27 @@ function showPage(pageId) {
         const names = carryPlayers.map(p => SHORT[p] || p).join(', ');
         const session = info.session === 'AM' ? 'morning' : 'afternoon';
         const caddieCount = info.max === 2 ? '1 carry caddie' : '2 carry caddies';
-        alertsHtml += '<div style="background:#fff3e0;border:1px solid #ffcc80;border-radius:10px;padding:14px 20px;margin-bottom:12px;font-size:0.88em;line-height:1.6;">';
-        alertsHtml += '<strong style="color:#e65100;">&#9888; ' + info.name + ':</strong> ';
-        alertsHtml += carryPlayers.length + ' players selected Carry Caddie (' + names + ') but only ' + caddieCount + ' allocated for ' + session + ' rounds (' + info.max + ' bags max). ';
-        alertsHtml += 'Someone will need to switch to forecaddie or push cart.';
-        alertsHtml += '</div>';
+        alerts.push('<div style="background:#fff3e0;border-radius:8px;padding:10px 14px;margin-bottom:10px;">'
+          + '<strong style="color:#e65100;">' + info.name + '</strong><br>'
+          + carryPlayers.length + ' players picked Carry (' + names + ') but only ' + caddieCount + ' allocated for ' + session + ' rounds (' + info.max + ' bags max).'
+          + '</div>');
+        alertKey += rd + ':' + names + ';';
       }
     });
-    document.getElementById('caddieAlerts').innerHTML = alertsHtml;
+    // Only show modal if conflicts changed (new conflict appeared)
+    if (alerts.length > 0 && alertKey !== lastAlertKey) {
+      lastAlertKey = alertKey;
+      document.getElementById('caddieAlertBody').innerHTML = alerts.join('') + '<p style="margin-top:8px;color:#888;font-size:0.85em;">Someone will need to switch to forecaddie or push cart for the flagged rounds.</p>';
+      document.getElementById('caddieAlertModal').classList.add('open');
+    }
+    // If all conflicts resolved, reset so future conflicts will trigger again
+    if (alerts.length === 0) {
+      lastAlertKey = '';
+    }
   }
+  window.dismissCaddieAlert = function() {
+    document.getElementById('caddieAlertModal').classList.remove('open');
+  };
 
   // Cycle through options on click
   window.cycleCell = function(pKey, round) {
