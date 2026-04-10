@@ -1861,9 +1861,7 @@
   <span style="font-size: 0.85em; color: #555;">Pick your caddie preference below. If more people want carry than we have slots, we'll coordinate.</span>
 </div>
 
-<div style="background: #fff3e0; border: 1px solid #ffcc80; border-radius: 10px; padding: 14px 20px; margin-bottom: 20px; font-size: 0.88em; line-height: 1.6;">
-  <strong style="color: #e65100;">&#9888; Rd 5 &mdash; Bandon Trails (Mon AM):</strong> 3 players have selected Carry Caddie (John A, Ben H, Josh J) but only 1 carry caddie is allocated for morning rounds (2 bags max). One person will need to switch to forecaddie or push cart for this round.
-</div>
+<div id="caddieAlerts"></div>
 
 <!-- ===================== CADDIE PREFERENCES (LIVE GRID) ===================== -->
 <div class="full-width">
@@ -2873,6 +2871,36 @@ function showPage(pageId) {
       html += '</tr>';
     });
     tbody.innerHTML = html;
+    checkCarryAlerts();
+  }
+
+  // Check carry caddie counts against allocation and show/hide alerts
+  function checkCarryAlerts() {
+    const ROUND_INFO = {
+      rd1: { name: 'Rd 1 — Old Macdonald (Sat AM)', max: 2, session: 'AM' },
+      rd2: { name: 'Rd 2 — Pacific Dunes (Sat PM)', max: 4, session: 'PM' },
+      rd3: { name: 'Rd 3 — Sheep Ranch (Sun AM)', max: 2, session: 'AM' },
+      rd4: { name: 'Rd 4 — Bandon Dunes (Sun PM)', max: 4, session: 'PM' },
+      rd5: { name: 'Rd 5 — Bandon Trails (Mon AM)', max: 2, session: 'AM' },
+      rd6: { name: 'Rd 6 — Pacific Dunes (Mon PM)', max: 4, session: 'PM' }
+    };
+    const SHORT = { 'Alec Bove':'Alec B', 'Ben Harrison':'Ben H', 'Brady Gayle':'Brady G', 'Cain Cody':'Cain C', 'Camden Cooper':'Camden C', 'Collin Horner':'Collin H', 'Harrison Hancock':'Harrison H', 'John Armes':'John A', 'John Gressett':'John G', 'Josh John':'Josh J', 'Stephen Wheatcroft':'Stephen W', 'Will Hayward':'Will H' };
+    let alertsHtml = '';
+    ROUNDS.forEach(rd => {
+      const info = ROUND_INFO[rd];
+      const carryPlayers = PLAYERS.filter(p => data[p] && data[p][rd] === 'carry');
+      if (carryPlayers.length > info.max) {
+        const names = carryPlayers.map(p => SHORT[p] || p).join(', ');
+        const session = info.session === 'AM' ? 'morning' : 'afternoon';
+        const caddieCount = info.max === 2 ? '1 carry caddie' : '2 carry caddies';
+        alertsHtml += '<div style="background:#fff3e0;border:1px solid #ffcc80;border-radius:10px;padding:14px 20px;margin-bottom:12px;font-size:0.88em;line-height:1.6;">';
+        alertsHtml += '<strong style="color:#e65100;">&#9888; ' + info.name + ':</strong> ';
+        alertsHtml += carryPlayers.length + ' players selected Carry Caddie (' + names + ') but only ' + caddieCount + ' allocated for ' + session + ' rounds (' + info.max + ' bags max). ';
+        alertsHtml += 'Someone will need to switch to forecaddie or push cart.';
+        alertsHtml += '</div>';
+      }
+    });
+    document.getElementById('caddieAlerts').innerHTML = alertsHtml;
   }
 
   // Cycle through options on click
