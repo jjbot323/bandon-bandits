@@ -868,6 +868,51 @@
   </div>
 </nav>
 
+<!-- ===== WHAT'S NEW POPUP ===== -->
+<div class="commish-modal-overlay" id="whatsNewModal">
+  <div class="commish-modal" style="max-width: 520px; text-align: left;">
+    <h3 style="text-align: center; font-size: 1.2em; margin-bottom: 12px;">&#128227; Planning Dinner Recap &mdash; April 10</h3>
+    <p style="text-align: center; color: #888; font-size: 0.82em; margin-bottom: 16px;">Here's what was covered. Dashboard has been updated with all of this.</p>
+
+    <div style="font-size: 0.85em; line-height: 1.7; color: #555;">
+      <div style="font-weight: 800; color: var(--green-dark); margin-bottom: 4px;">&#128656; Logistics</div>
+      <ul style="padding-left: 18px; margin: 0 0 14px 0;">
+        <li>Shuttles run 24/7, arrive in 2&ndash;3 min &mdash; all courses 5&ndash;15 min apart</li>
+        <li>Pro shops hold a bag with your change of clothes &amp; shoes for the afternoon round</li>
+        <li>No overnight club storage &mdash; clubs go back to room each night</li>
+        <li>On double days, go straight to next course and eat lunch there</li>
+      </ul>
+
+      <div style="font-weight: 800; color: var(--green-dark); margin-bottom: 4px;">&#127942; Tournament Format</div>
+      <ul style="padding-left: 18px; margin: 0 0 14px 0;">
+        <li><strong>Team draft at The Gallery dinner</strong> on arrival night &mdash; captains pick teams</li>
+        <li>Morning rounds (Sat &amp; Sun): Combined Score match play (2v2)</li>
+        <li>Afternoon rounds (Sat &amp; Sun): Best Ball match play (2v2)</li>
+        <li>Monday (last full day): All singles match play head-to-head</li>
+        <li>No handicap strokes &mdash; pairings structured to balance skill</li>
+        <li>24 total points, first to 12&frac12; wins</li>
+      </ul>
+
+      <div style="font-weight: 800; color: var(--green-dark); margin-bottom: 4px;">&#128220; House Rules</div>
+      <ul style="padding-left: 18px; margin: 0 0 14px 0;">
+        <li>Triple max (max score on any hole is triple bogey)</li>
+        <li>OB / lost ball played laterally from where ball ended up</li>
+        <li>Gimmes allowed only if opponent verbally concedes</li>
+      </ul>
+
+      <div style="font-weight: 800; color: var(--green-dark); margin-bottom: 4px;">&#127873; Prize</div>
+      <ul style="padding-left: 18px; margin: 0 0 4px 0;">
+        <li>Each winner gets a hat or tee of their choice ($50 max) courtesy of the losing team</li>
+        <li>Use it at the resort or lose it &mdash; no rain checks</li>
+      </ul>
+    </div>
+
+    <div class="commish-modal-btns" style="margin-top: 18px;">
+      <button class="commish-submit" onclick="dismissWhatsNew()" style="padding: 10px 32px; font-size: 0.95em;">Got It</button>
+    </div>
+  </div>
+</div>
+
 <div class="container">
 
 <!-- ========================== PAGE: HOME ========================== -->
@@ -2795,11 +2840,24 @@ function closeDinnerModal() {
   document.body.style.overflow = '';
 }
 
+// ===== WHAT'S NEW POPUP =====
+(function() {
+  var KEY = 'bandon_whats_new_v20260410';
+  if (!localStorage.getItem(KEY)) {
+    document.getElementById('whatsNewModal').classList.add('open');
+  }
+  window.dismissWhatsNew = function() {
+    document.getElementById('whatsNewModal').classList.remove('open');
+    localStorage.setItem(KEY, '1');
+  };
+})();
+
 // Close modals with Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeModal();
     closeDinnerModal();
+    dismissWhatsNew();
   }
 });
 
