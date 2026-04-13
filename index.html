@@ -1896,12 +1896,12 @@
 <!-- ========================== PAGE: CADDIES (real content) ========================== -->
 <div id="page-caddies" class="page-section">
 
-<!-- CARRY CADDIE ALLOCATION NOTE -->
+<!-- CADDIE INFO NOTE -->
 <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: 1px solid #90caf9; border-radius: 10px; padding: 14px 20px; margin-bottom: 20px; font-size: 0.9em; line-height: 1.6;">
-  <strong style="color: #1565c0;">&#128206; Carry Caddie Allocation:</strong><br>
-  <strong>Morning rounds:</strong> 1 carry caddie reserved (can carry 2 bags)<br>
-  <strong>Afternoon rounds:</strong> 2 carry caddies reserved (can carry 4 bags total)<br>
-  <span style="font-size: 0.85em; color: #555;">Pick your caddie preference below. If more people want carry than we have slots, we'll coordinate.</span>
+  <strong style="color: #1565c0;">&#9971; How Caddies Work:</strong><br>
+  Every group will have a <strong>forecaddie</strong>. Some groups will also include <strong>carry caddies</strong> based on our request.<br>
+  <strong>Morning rounds:</strong> 1 carry caddie (2 bags) &bull; <strong>Afternoon rounds:</strong> 2 carry caddies (4 bags)<br>
+  <span style="font-size: 0.85em; color: #555;">Use the grid below to mark which rounds you want a carry caddie.</span>
 </div>
 
 <div class="commish-modal-overlay" id="caddieAlertModal">
@@ -1917,7 +1917,7 @@
 <!-- ===================== CADDIE PREFERENCES (LIVE GRID) ===================== -->
 <div class="full-width">
   <div class="card">
-    <div class="card-header">Caddie Preferences <span style="font-size: 0.7em; opacity: 0.8; margin-left: 10px;">Click any cell to cycle options &bull; Syncs live for everyone</span></div>
+    <div class="card-header">Carry Caddie Requests <span style="font-size: 0.7em; opacity: 0.8; margin-left: 10px;">Tap to toggle &bull; Syncs live for everyone</span></div>
     <div class="card-body" style="overflow-x: auto;">
       <div class="caddie-who">
         <label for="caddieWho">I am:</label>
@@ -1938,9 +1938,8 @@
         </select>
       </div>
       <div class="caddie-cost-legend">
-        <span><span class="caddie-val-cart">No Caddie</span> Push cart, no caddie (free)</span>
-        <span><span class="caddie-val-fore">Forecaddie</span> Shared forecaddie (~$60/person)</span>
-        <span><span class="caddie-val-carry">Carry Caddie</span> Single or double carry (~$160/person, tip included)</span>
+        <span><span class="caddie-val-cart">Forecaddie</span> Default for all rounds (included)</span>
+        <span><span class="caddie-val-carry">Carry Caddie</span> ~$160/person, tip included</span>
       </div>
       <table class="caddie-grid" id="caddieGrid">
         <thead>
@@ -1976,9 +1975,6 @@
     </div>
   </div>
 </div>
-      <div style="margin-top:1rem; padding:12px 16px; background:#fff8e1; border-left:4px solid var(--gold); border-radius:6px; font-size:0.88em; line-height:1.5;">
-        <strong>No caddie? Quick etiquette note:</strong> If you're going without a caddie but getting help from someone else's caddie with lines, reads, etc., proper etiquette is to throw that caddie some bones at the end of the round. Please tip them $20–25 for the assist.
-      </div>
     </div>
   </div>
 </div>
@@ -2857,10 +2853,10 @@ function showPage(pageId) {
     'Josh John','Stephen Wheatcroft','Will Hayward'
   ];
   const ROUNDS = ['rd1','rd2','rd3','rd4','rd5','rd6'];
-  const OPTIONS = ['', 'cart', 'fore', 'carry'];
-  const LABELS = { '': 'Tap', 'cart': 'No Caddie', 'fore': 'Forecaddie', 'carry': 'Carry Caddie' };
-  const CSS = { '': 'caddie-val-none', 'cart': 'caddie-val-cart', 'fore': 'caddie-val-fore', 'carry': 'caddie-val-carry' };
-  const COSTS = { '': 0, 'cart': 0, 'fore': 60, 'carry': 160 };
+  const OPTIONS = ['fore', 'carry'];
+  const LABELS = { '': 'Tap', 'cart': 'Forecaddie', 'fore': 'Forecaddie', 'carry': 'Carry Caddie' };
+  const CSS = { '': 'caddie-val-cart', 'cart': 'caddie-val-cart', 'fore': 'caddie-val-cart', 'carry': 'caddie-val-carry' };
+  const COSTS = { '': 0, 'cart': 0, 'fore': 0, 'carry': 160 };
 
   let data = {};
   let activeUser = '';
@@ -2868,11 +2864,12 @@ function showPage(pageId) {
   // Simple hash check — not meant to be Fort Knox, just keeps the guys from messing with each other
   const COMMISH_HASH = 'b141a';
   function hashPw(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return 'b' + Math.abs(h).toString(16).slice(0,4); }
-  PLAYERS.forEach(p => { data[p] = {}; ROUNDS.forEach(r => { data[p][r] = ''; }); });
+  PLAYERS.forEach(p => { data[p] = {}; ROUNDS.forEach(r => { data[p][r] = 'fore'; }); });
 
-  // Sanitize values from Firebase - only allow known options
+  // Sanitize values from Firebase - map old values to new options
   function sanitize(val) {
-    return OPTIONS.indexOf(val) !== -1 ? val : '';
+    if (val === 'carry') return 'carry';
+    return 'fore'; // everything else defaults to forecaddie
   }
 
   function playerKey(name) { return name.replace(/\s+/g, '_'); }
