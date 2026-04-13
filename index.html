@@ -1904,7 +1904,6 @@
   <span style="font-size: 0.85em; color: #555;">Use the grid below to mark which rounds you want a carry caddie.</span>
 </div>
 
-<div id="caddieAlertInline"></div>
 
 <!-- ===================== CADDIE PREFERENCES (LIVE GRID) ===================== -->
 <div class="full-width">
@@ -2913,39 +2912,17 @@ function showPage(pageId) {
       html += '<td class="cost-col">' + (playerCost > 0 ? '$' + playerCost : '-') + '</td>';
       html += '</tr>';
     });
-    tbody.innerHTML = html;
-    checkCarryAlerts();
-  }
-
-  // Check carry caddie counts against allocation and show inline status
-  function checkCarryAlerts() {
-    const ROUND_INFO = {
-      rd1: { name: 'Old Macdonald (Sat AM)', max: 2, session: 'AM' },
-      rd2: { name: 'Pacific Dunes (Sat PM)', max: 4, session: 'PM' },
-      rd3: { name: 'Sheep Ranch (Sun AM)', max: 2, session: 'AM' },
-      rd4: { name: 'Bandon Dunes (Sun PM)', max: 4, session: 'PM' },
-      rd5: { name: 'Bandon Trails (Mon AM)', max: 2, session: 'AM' },
-      rd6: { name: 'Pacific Dunes (Mon PM)', max: 4, session: 'PM' }
-    };
-    let alerts = [];
-    ROUNDS.forEach(rd => {
-      const info = ROUND_INFO[rd];
-      const carryCount = PLAYERS.filter(p => data[p] && data[p][rd] === 'carry').length;
-      if (carryCount > info.max) {
-        var extra = carryCount - info.max;
-        var label = extra === 1 ? '1 additional carry caddie' : extra + ' additional carry caddies';
-        alerts.push('<strong>' + info.name + ':</strong> Need to request ' + label);
-      }
+    // Add summary row at bottom showing additional carry caddies needed per round
+    const MAX_CARRY = { rd1: 2, rd2: 4, rd3: 2, rd4: 4, rd5: 2, rd6: 4 };
+    let summaryRow = '<tr style="background:#fff8e1; font-weight:700; font-size:0.82em; border-top:2px solid var(--gold);"><td style="color:#e65100;">Extra Carry Needed</td>';
+    ROUNDS.forEach(r => {
+      const carryCount = PLAYERS.filter(p => data[p] && data[p][r] === 'carry').length;
+      const extra = Math.max(0, carryCount - MAX_CARRY[r]);
+      const color = extra > 0 ? '#e65100' : '#4a8a3a';
+      summaryRow += '<td style="text-align:center; color:' + color + ';">' + extra + '</td>';
     });
-    var el = document.getElementById('caddieAlertInline');
-    if (alerts.length > 0) {
-      el.innerHTML = '<div style="background:#fff3e0;border:1px solid #ffcc80;border-radius:10px;padding:14px 20px;margin-bottom:20px;font-size:0.88em;line-height:1.8;">'
-        + '<strong style="color:#e65100;">&#9888; Additional carry caddies needed:</strong><br>'
-        + alerts.join('<br>')
-        + '</div>';
-    } else {
-      el.innerHTML = '';
-    }
+    summaryRow += '<td></td></tr>';
+    tbody.innerHTML = html + summaryRow;
   }
 
   // Cycle through options on click
