@@ -2959,7 +2959,7 @@ function showPage(pageId) {
     // Only show modal if conflicts changed (new conflict appeared)
     if (alerts.length > 0 && alertKey !== lastAlertKey) {
       lastAlertKey = alertKey;
-      document.getElementById('caddieAlertBody').innerHTML = alerts.join('') + '<p style="margin-top:8px;color:#888;font-size:0.85em;">We\'ll need to request additional carry caddies from the resort for the flagged rounds.</p>';
+      document.getElementById('caddieAlertBody').innerHTML = alerts.join('') + '<p style="margin-top:8px;color:#888;font-size:0.85em;">Need to request additional carry caddie or someone will need to switch to forecaddie for the flagged rounds.</p>';
       document.getElementById('caddieAlertModal').classList.add('open');
     }
     // If all conflicts resolved, reset so future conflicts will trigger again
