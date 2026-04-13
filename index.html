@@ -2917,7 +2917,7 @@ function showPage(pageId) {
     let summaryRow = '<tr style="background:#fff8e1; font-weight:700; font-size:0.82em; border-top:2px solid var(--gold);"><td style="color:#e65100;">Extra Carry Needed</td>';
     ROUNDS.forEach(r => {
       const carryCount = PLAYERS.filter(p => data[p] && data[p][r] === 'carry').length;
-      const extra = Math.max(0, carryCount - MAX_CARRY[r]);
+      const extra = Math.max(0, Math.ceil((carryCount - MAX_CARRY[r]) / 2));
       const color = extra > 0 ? '#e65100' : '#4a8a3a';
       summaryRow += '<td style="text-align:center; color:' + color + ';">' + extra + '</td>';
     });
