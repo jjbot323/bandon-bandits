@@ -830,7 +830,8 @@
   }
   .draft-pool.drag-over { background: #e8f5e9; border-color: var(--green); }
   .draft-team-col {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    justify-items: center;
     min-height: 120px; padding: 14px;
     border: 2px dashed #ccc; border-radius: 12px;
     transition: background 0.2s, border-color 0.2s;
