@@ -2982,7 +2982,7 @@ function showPage(pageId) {
   let activeUser = '';
   let commishMode = false;
   // Simple hash check — not meant to be Fort Knox, just keeps the guys from messing with each other
-  const COMMISH_HASH = 'b141a';
+  const COMMISH_HASH = 'b7458';
   function hashPw(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return 'b' + Math.abs(h).toString(16).slice(0,4); }
   PLAYERS.forEach(p => { data[p] = {}; ROUNDS.forEach(r => { data[p][r] = 'fore'; }); });
 
@@ -3431,7 +3431,7 @@ function showPage(pageId) {
   };
 
   // Password (same as caddie grid)
-  const COMMISH_HASH = 'b141a';
+  const COMMISH_HASH = 'b7458';
   function hashPw(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return 'b' + Math.abs(h).toString(16).slice(0,4); }
 
   // Restore commish mode from localStorage
