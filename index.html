@@ -893,12 +893,6 @@
     width: 28px; height: 28px; border-radius: 50%; border: 2px dashed #ccc;
     display: inline-block; background: #f5f5f5;
   }
-  .captain-drop-zone {
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .captain-drop-zone.drag-over, .captain-drop-zone.drag-over-gold {
-    background: rgba(201,168,76,0.15) !important; border-color: var(--gold) !important; border-style: solid !important;
-  }
   .team-header-row {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     margin-bottom: 8px; font-weight: 800; font-size: 1em; color: var(--green-dark);
@@ -3457,33 +3451,17 @@ function showPage(pageId) {
       el.classList.remove('drag-over-gold');
       var name = e.dataTransfer.getData('text/plain');
       if (!name || !commishMode) return;
-      // Check if this is a captain drop zone
-      if (team === 'capA' || team === 'capB') {
-        var side = team === 'capA' ? 'A' : 'B';
-        var roster = side === 'A' ? tourneyData.teams.teamA : tourneyData.teams.teamB;
-        if (roster.indexOf(name) < 0) return; // must be on this team
-        if (side === 'A') tourneyData.teams.captainA = name;
-        else tourneyData.teams.captainB = name;
-        saveTeams();
-        renderTournament();
-        return;
-      }
       if (team === 'pool') {
         tourneyData.teams.teamA = tourneyData.teams.teamA.filter(function(n) { return n !== name; });
         tourneyData.teams.teamB = tourneyData.teams.teamB.filter(function(n) { return n !== name; });
-        // Clear captain if removed
-        if (tourneyData.teams.captainA === name) tourneyData.teams.captainA = '';
-        if (tourneyData.teams.captainB === name) tourneyData.teams.captainB = '';
       } else if (team === 'A') {
         if (tourneyData.teams.teamA.indexOf(name) >= 0) return;
         tourneyData.teams.teamB = tourneyData.teams.teamB.filter(function(n) { return n !== name; });
-        if (tourneyData.teams.captainB === name) tourneyData.teams.captainB = '';
         if (tourneyData.teams.teamA.length >= 6) return;
         tourneyData.teams.teamA.push(name);
       } else if (team === 'B') {
         if (tourneyData.teams.teamB.indexOf(name) >= 0) return;
         tourneyData.teams.teamA = tourneyData.teams.teamA.filter(function(n) { return n !== name; });
-        if (tourneyData.teams.captainA === name) tourneyData.teams.captainA = '';
         if (tourneyData.teams.teamB.length >= 6) return;
         tourneyData.teams.teamB.push(name);
       }
@@ -3540,23 +3518,9 @@ function showPage(pageId) {
     if (tA.length > 0) html += '<span style="font-size:0.78em;opacity:0.85;">Combined HCP: ' + hcpA.toFixed(1) + '</span>';
     html += '</div><div class="card-body">';
 
-    // Captain drop zone
-    html += '<div style="text-align:center;margin-bottom:10px;">';
-    if (tourneyData.teams.captainA && PMAP[tourneyData.teams.captainA]) {
-      var capA = PMAP[tourneyData.teams.captainA];
-      html += '<div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fff8e1,#fff3cd);border:2px solid var(--gold);border-radius:10px;padding:6px 14px;">';
-      html += faceImg(capA.name, 32) + ' <span style="font-weight:800;font-size:0.88em;color:var(--green-dark);">Captain: ' + capA.short + '</span>';
-      html += '</div>';
-    } else if (commishMode && tA.length > 0) {
-      html += '<div class="captain-drop-zone" id="capDropA" style="border:2px dashed var(--gold);border-radius:10px;padding:8px 16px;color:#bbb;font-size:0.82em;font-weight:700;">Drag a team member here to set Captain</div>';
-    } else {
-      html += '<div style="font-size:0.82em;color:#bbb;">Captain TBD</div>';
-    }
-    html += '</div>';
-
     html += '<div class="draft-team-col" id="draftTeamA">';
-    tA.forEach(function(name) {
-      var isCaptain = name === tourneyData.teams.captainA;
+    tA.forEach(function(name, idx) {
+      var isCaptain = idx === 0;
       html += '<div style="position:relative;">';
       if (isCaptain) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:0.65em;font-weight:800;color:var(--gold);background:var(--white);padding:1px 6px;border-radius:8px;border:1px solid var(--gold);z-index:2;white-space:nowrap;">CAPTAIN</div>';
       html += faceCard(name, {draggable: commishMode});
@@ -3574,23 +3538,9 @@ function showPage(pageId) {
     if (tB.length > 0) html += '<span style="font-size:0.78em;opacity:0.85;">Combined HCP: ' + hcpB.toFixed(1) + '</span>';
     html += '</div><div class="card-body">';
 
-    // Captain drop zone
-    html += '<div style="text-align:center;margin-bottom:10px;">';
-    if (tourneyData.teams.captainB && PMAP[tourneyData.teams.captainB]) {
-      var capB = PMAP[tourneyData.teams.captainB];
-      html += '<div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fff8e1,#fff3cd);border:2px solid var(--gold);border-radius:10px;padding:6px 14px;">';
-      html += faceImg(capB.name, 32) + ' <span style="font-weight:800;font-size:0.88em;color:var(--green-dark);">Captain: ' + capB.short + '</span>';
-      html += '</div>';
-    } else if (commishMode && tB.length > 0) {
-      html += '<div class="captain-drop-zone" id="capDropB" style="border:2px dashed var(--gold);border-radius:10px;padding:8px 16px;color:#bbb;font-size:0.82em;font-weight:700;">Drag a team member here to set Captain</div>';
-    } else {
-      html += '<div style="font-size:0.82em;color:#bbb;">Captain TBD</div>';
-    }
-    html += '</div>';
-
     html += '<div class="draft-team-col team-b" id="draftTeamB">';
-    tB.forEach(function(name) {
-      var isCaptain = name === tourneyData.teams.captainB;
+    tB.forEach(function(name, idx) {
+      var isCaptain = idx === 0;
       html += '<div style="position:relative;">';
       if (isCaptain) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:0.65em;font-weight:800;color:var(--gold);background:var(--white);padding:1px 6px;border-radius:8px;border:1px solid var(--gold);z-index:2;white-space:nowrap;">CAPTAIN</div>';
       html += faceCard(name, {draggable: commishMode});
@@ -3610,13 +3560,9 @@ function showPage(pageId) {
       var pool = document.getElementById('draftPool');
       var teamAZone = document.getElementById('draftTeamA');
       var teamBZone = document.getElementById('draftTeamB');
-      var capDropA = document.getElementById('capDropA');
-      var capDropB = document.getElementById('capDropB');
       if (pool) setupDropZone(pool, 'pool');
       if (teamAZone) setupDropZone(teamAZone, 'A');
       if (teamBZone) setupDropZone(teamBZone, 'B');
-      if (capDropA) setupDropZone(capDropA, 'capA');
-      if (capDropB) setupDropZone(capDropB, 'capB');
     }
   }
 
@@ -3734,8 +3680,9 @@ function showPage(pageId) {
 
   function canEditSide(team) {
     if (commishMode) return true;
-    // Captains can edit their own team
-    var captainName = team === 'A' ? tourneyData.teams.captainA : tourneyData.teams.captainB;
+    // First player on each team is captain and can edit
+    var roster = team === 'A' ? tourneyData.teams.teamA : tourneyData.teams.teamB;
+    var captainName = roster && roster.length > 0 ? roster[0] : '';
     if (captainName && localStorage.getItem('bandon_tourney_captain') === captainName) return true;
     return false;
   }
