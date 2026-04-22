@@ -3487,11 +3487,6 @@ function showPage(pageId) {
     // Hide "TBD" only when teams exist
     if (announcement) announcement.style.display = hasTeams ? 'none' : 'block';
 
-    if (!hasTeams && !commishMode) {
-      container.innerHTML = '';
-      return;
-    }
-
     var html = '';
 
     // In commish mode show drag pool
@@ -3526,9 +3521,7 @@ function showPage(pageId) {
       html += faceCard(name, {draggable: commishMode});
       html += '</div>';
     });
-    if (commishMode) {
-      for (var i = tA.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
-    }
+    for (var i = tA.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
     html += '</div></div></div>';
 
     // Team B
@@ -3546,9 +3539,7 @@ function showPage(pageId) {
       html += faceCard(name, {draggable: commishMode});
       html += '</div>';
     });
-    if (commishMode) {
-      for (var i = tB.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
-    }
+    for (var i = tB.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
     html += '</div></div></div>';
 
     html += '</div>'; // close grid
