@@ -1941,37 +1941,11 @@
         </div>
       </div>
 
-      <!-- FORMAT -->
+      <!-- SCORING -->
       <div class="scoring-note" style="margin-bottom: 20px; text-align: left;">
-        <strong>Format by Session:</strong><br><br>
-        <strong>Morning Rounds (Sat &amp; Sun):</strong> Combined Score Match Play &mdash; 2v2, both players&rsquo; scores added together, lowest combined total wins the hole<br>
-        <strong>Afternoon Rounds (Sat &amp; Sun):</strong> Best Ball Match Play &mdash; 2v2, both players play their own ball, best score wins the hole<br>
-        <strong>Monday (Last Full Day):</strong> All Singles Match Play &mdash; 1v1 head-to-head, all 6 matches each session<br>
-        <br>
         <strong>Scoring:</strong> Each match is worth <strong>1 point</strong> (Win = 1, Halve = &frac12;, Loss = 0).<br>
         <strong>3 points per session &times; 4 team sessions + 6 points &times; 2 singles sessions = 24 total points. First to 12&frac12; wins.</strong>
       </div>
-
-      <!-- ROUND OVERVIEW TABLE -->
-      <table class="points-table" style="text-align: left;">
-        <thead>
-          <tr>
-            <th>Session</th>
-            <th>Course</th>
-            <th>Format</th>
-            <th>Matches</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Sat AM</td><td>Old Macdonald</td><td>Combined Score</td><td>3</td></tr>
-          <tr><td>Sat PM</td><td>Pacific Dunes</td><td>Best Ball</td><td>3</td></tr>
-          <tr><td>Sun AM</td><td>Sheep Ranch</td><td>Combined Score</td><td>3</td></tr>
-          <tr><td>Sun PM</td><td>Bandon Dunes</td><td>Best Ball</td><td>3</td></tr>
-          <tr><td>Mon AM</td><td>Bandon Trails</td><td>Singles</td><td>6</td></tr>
-          <tr><td>Mon PM</td><td>Pacific Dunes</td><td>Singles</td><td>6</td></tr>
-          <tr class="points-total"><td colspan="3" style="text-align: left;"><strong>TOTAL</strong></td><td><strong>24 pts</strong></td></tr>
-        </tbody>
-      </table>
 
       <!-- PRIZE -->
       <div style="background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; border-radius: 10px; padding: 16px 24px; margin-top: 20px; text-align: center;">
@@ -3659,12 +3633,6 @@ function showPage(pageId) {
   // ---- RENDER: SESSIONS ----
   function renderAllSessions() {
     var container = document.getElementById('tournamentPairings');
-    var tA = tourneyData.teams.teamA || [];
-    var tB = tourneyData.teams.teamB || [];
-    if (tA.length === 0 && tB.length === 0) {
-      container.innerHTML = '';
-      return;
-    }
     var html = '';
     SESSIONS.forEach(function(s) { html += renderSession(s); });
     container.innerHTML = html;
