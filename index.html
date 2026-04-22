@@ -3489,19 +3489,17 @@ function showPage(pageId) {
 
     var html = '';
 
-    // In commish mode show drag pool
-    if (commishMode) {
-      var assigned = tA.concat(tB);
-      var available = PNAMES.filter(function(n) { return assigned.indexOf(n) < 0; });
-      html += '<div style="text-align:center;font-weight:700;font-size:0.88em;color:#999;margin-bottom:6px;">Available Players (drag to a team)</div>';
-      html += '<div class="draft-pool" id="draftPool">';
-      if (available.length === 0) {
-        html += '<div style="color:#999;font-size:0.88em;padding:10px;">All players assigned!</div>';
-      } else {
-        available.forEach(function(name) { html += faceCard(name, {draggable:true}); });
-      }
-      html += '</div>';
+    // Available players pool (always visible)
+    var assigned = tA.concat(tB);
+    var available = PNAMES.filter(function(n) { return assigned.indexOf(n) < 0; });
+    html += '<div style="text-align:center;font-weight:700;font-size:0.88em;color:#999;margin-bottom:6px;">Available Players' + (commishMode ? ' (drag to a team)' : '') + '</div>';
+    html += '<div class="draft-pool" id="draftPool">';
+    if (available.length === 0) {
+      html += '<div style="color:#999;font-size:0.88em;padding:10px;">All players assigned!</div>';
+    } else {
+      available.forEach(function(name) { html += faceCard(name, {draggable: commishMode}); });
     }
+    html += '</div>';
 
     // Two team columns
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">';
