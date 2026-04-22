@@ -828,6 +828,98 @@
     font-weight: 700; padding: 1px 4px; border-radius: 4px;
   }
   :root[data-theme="dark"] .tt-mention { background: rgba(58, 122, 50, 0.3); }
+
+  /* ===== TOURNAMENT PAIRINGS ===== */
+  .draft-pool {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+    padding: 16px; min-height: 80px;
+    background: var(--sand); border: 2px dashed #ccc; border-radius: 12px; margin-bottom: 20px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .draft-pool.drag-over { background: #e8f5e9; border-color: var(--green); }
+  .draft-team-col {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    min-height: 120px; padding: 14px;
+    border: 2px dashed #ccc; border-radius: 12px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .draft-team-col.drag-over { background: rgba(45,90,39,0.08); border-color: var(--green); }
+  .draft-team-col.drag-over-gold { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+  .team-face.draggable { cursor: grab; user-select: none; }
+  .team-face.draggable:active { cursor: grabbing; }
+  .team-face.dragging { opacity: 0.4; }
+  .draft-empty-slot {
+    width: 90px; height: 120px; border: 2px dashed #ccc; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 2em; font-weight: 300;
+  }
+  .session-card { margin-bottom: 16px; }
+  .session-card .card-header { display: flex; justify-content: space-between; align-items: center; }
+  .session-badge {
+    font-size: 0.72em; padding: 3px 10px; border-radius: 10px;
+    background: rgba(255,255,255,0.25); font-weight: 600;
+  }
+  .pairing-row {
+    display: grid; grid-template-columns: 60px 1fr 40px 1fr; gap: 8px;
+    align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;
+  }
+  .pairing-row:last-child { border-bottom: none; }
+  .pairing-time {
+    font-weight: 700; font-size: 0.88em; color: var(--green-dark);
+    text-align: center;
+  }
+  .pairing-vs {
+    font-weight: 800; font-size: 0.82em; color: #999; text-align: center;
+  }
+  .pairing-team {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .pairing-team.team-b { justify-content: flex-end; }
+  .pairing-player {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.85em; font-weight: 600;
+  }
+  .pairing-player img {
+    width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--green);
+  }
+  .pairing-team.team-b .pairing-player img { border-color: var(--gold); }
+  .pairing-player select {
+    padding: 4px 6px; border: 2px solid #ddd; border-radius: 6px;
+    font-size: 0.9em; font-weight: 600; cursor: pointer; max-width: 130px;
+  }
+  .pairing-player select:focus { outline: none; border-color: var(--green); }
+  .pairing-player .slot-empty {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px dashed #ccc;
+    display: inline-block; background: #f5f5f5;
+  }
+  .captain-select {
+    padding: 6px 10px; border: 2px solid var(--gold); border-radius: 8px;
+    font-size: 0.88em; font-weight: 700; cursor: pointer; background: var(--white);
+  }
+  .captain-select:focus { outline: none; border-color: var(--green); }
+  .team-header-row {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 8px; font-weight: 800; font-size: 1em; color: var(--green-dark);
+  }
+  .team-header-row img {
+    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--green);
+  }
+  .team-header-row.gold img { border-color: var(--gold); }
+  .team-header-row.gold { color: #8B6914; }
+  @media (max-width: 768px) {
+    .pairing-row { grid-template-columns: 45px 1fr 30px 1fr; gap: 4px; }
+    .pairing-player img { width: 22px; height: 22px; }
+    .pairing-player { font-size: 0.78em; }
+    .draft-pool .team-face img, .draft-team-col .team-face img { width: 60px; height: 60px; }
+    .draft-empty-slot { width: 60px; height: 80px; }
+  }
+  :root[data-theme="dark"] .draft-pool { background: #252538; border-color: #444; }
+  :root[data-theme="dark"] .draft-team-col { border-color: #444; }
+  :root[data-theme="dark"] .draft-empty-slot { border-color: #555; color: #555; }
+  :root[data-theme="dark"] .pairing-player select { background: #2c2c3a; color: var(--text); border-color: #555; }
+  :root[data-theme="dark"] .pairing-time { color: var(--green-dark); }
   .tt-mention-dropdown {
     position: absolute; bottom: 100%; left: 20px; right: 20px;
     background: var(--white); border: 1px solid #ddd; border-radius: 8px;
@@ -1830,11 +1922,37 @@
         <div class="team-face"><div class="team-face-hcp">HCP 11.7</div><img src="Faces/Will_H_face.jpg" alt="Will Hayward"><div class="team-face-name">Will<br>Hayward</div></div>
       </div>
 
-      <!-- DRAFT ANNOUNCEMENT -->
-      <div style="background: linear-gradient(135deg, #e8dfc8, #f0e8d0); border: 2px solid var(--gold); border-radius: 10px; padding: 18px 24px; margin-bottom: 24px; text-align: center;">
+      <!-- DRAFT ANNOUNCEMENT (shown when no teams set) -->
+      <div id="draftAnnouncement" style="background: linear-gradient(135deg, #e8dfc8, #f0e8d0); border: 2px solid var(--gold); border-radius: 10px; padding: 18px 24px; margin-bottom: 24px; text-align: center;">
         <div style="font-size: 1.4em; margin-bottom: 6px;">&#127942;</div>
         <div style="font-weight: 800; font-size: 1.1em; color: var(--green-dark);">Team Draft at The Gallery &mdash; Friday Night Dinner</div>
         <div style="font-size: 0.9em; color: #666; margin-top: 4px;">Team captains will draft their squads at dinner on arrival night. Teams TBD until then.</div>
+      </div>
+
+      <!-- TEAM ROSTERS (dynamically rendered) -->
+      <div id="tournamentTeams" style="margin-bottom: 24px;"></div>
+
+      <!-- SESSION PAIRINGS (dynamically rendered) -->
+      <div id="tournamentPairings" style="margin-bottom: 24px;"></div>
+
+      <!-- CAPTAIN/COMMISSIONER MODE BAR -->
+      <div class="commish-bar" id="tourneyCommishBar" style="margin-bottom: 20px;">
+        <span id="tourneyCommishLabel" style="color:#999;">&#9917; Commissioner Mode</span>
+        <button class="commish-btn" id="tourneyCommishBtn" onclick="toggleTourneyCommish()">Unlock</button>
+      </div>
+
+      <!-- Commissioner password modal for tournament -->
+      <div class="commish-modal-overlay" id="tourneyCommishModal">
+        <div class="commish-modal">
+          <h3>Commissioner Mode</h3>
+          <p>Enter the password to edit teams and pairings.</p>
+          <input type="password" id="tourneyCommishPw" placeholder="Password" autocomplete="off" onkeydown="if(event.key==='Enter')submitTourneyCommishPw()">
+          <div class="commish-error" id="tourneyCommishError">Incorrect password. Try again.</div>
+          <div class="commish-modal-btns">
+            <button class="commish-cancel" onclick="closeTourneyCommishModal()">Cancel</button>
+            <button class="commish-submit" onclick="submitTourneyCommishPw()">Unlock</button>
+          </div>
+        </div>
       </div>
 
       <!-- FORMAT -->
@@ -3275,6 +3393,487 @@ function showPage(pageId) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTrashTalk(); }
   });
 })();
+
+// ===== TOURNAMENT PAIRINGS (Firebase Realtime Database) =====
+(function() {
+  const DB_URL = 'https://bandon-bandits-default-rtdb.firebaseio.com';
+  const PLAYERS = [
+    {name:'Alec Bove',     hcp:4.3,  face:'Faces/Alec_B_face.jpg',     short:'Alec B'},
+    {name:'Ben Harrison',  hcp:13.7, face:'Faces/Ben_H_face.jpg',      short:'Ben H'},
+    {name:'Brady Gayle',   hcp:11.7, face:'Faces/Brady_G_face.jpg',    short:'Brady G'},
+    {name:'Cain Cody',     hcp:16.1, face:'Faces/Cain_C_face.jpg',     short:'Cain C'},
+    {name:'Camden Cooper', hcp:10.0, face:'Faces/Camden_C_face.jpg',   short:'Camden C'},
+    {name:'Collin Horner', hcp:2.3,  face:'Faces/Collin_H_face.jpg',   short:'Collin H'},
+    {name:'Harrison Hancock',hcp:16.8,face:'Faces/Harrison_H_face.jpg',short:'Harrison H'},
+    {name:'John Armes',    hcp:3.6,  face:'Faces/John_A_face.jpg',     short:'John A'},
+    {name:'John Gressett', hcp:14.1, face:'Faces/John_G_face.jpg',     short:'John G'},
+    {name:'Josh John',     hcp:15.0, face:'Faces/Josh_J_face.jpg',     short:'Josh J'},
+    {name:'Stephen Wheatcroft',hcp:15.0,face:'Faces/Stephen_W_face.jpg',short:'Stephen W'},
+    {name:'Will Hayward',  hcp:11.7, face:'Faces/Will_H_face.jpg',     short:'Will H'}
+  ];
+  const PNAMES = PLAYERS.map(function(p) { return p.name; });
+  const PMAP = {}; PLAYERS.forEach(function(p) { PMAP[p.name] = p; });
+
+  const SESSIONS = [
+    {key:'sat_am', label:'Sat AM', course:'Old Macdonald', format:'Combined Score', type:'2v2', tees:['7:20a','7:30a','7:40a']},
+    {key:'sat_pm', label:'Sat PM', course:'Pacific Dunes', format:'Best Ball',      type:'2v2', tees:['1:20p','1:30p','1:40p']},
+    {key:'sun_am', label:'Sun AM', course:'Sheep Ranch',   format:'Combined Score', type:'2v2', tees:['7:30a','7:40a','7:50a']},
+    {key:'sun_pm', label:'Sun PM', course:'Bandon Dunes',  format:'Best Ball',      type:'2v2', tees:['2:00p','2:10p','2:20p']},
+    {key:'mon_am', label:'Mon AM', course:'Bandon Trails',  format:'Singles',       type:'1v1', tees:['8:40a','8:50a','9:00a']},
+    {key:'mon_pm', label:'Mon PM', course:'Pacific Dunes',  format:'Singles',       type:'1v1', tees:['2:40p','2:50p','3:10p']}
+  ];
+
+  // State
+  var commishMode = false;
+  var tourneyData = {
+    teams: { teamA: [], teamB: [], captainA: '', captainB: '', draftComplete: false },
+    sessions: {}
+  };
+
+  // Password (same as caddie grid)
+  const COMMISH_HASH = 'b141a';
+  function hashPw(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return 'b' + Math.abs(h).toString(16).slice(0,4); }
+
+  // Restore commish mode from localStorage
+  if (localStorage.getItem('bandon_tourney_commish') === 'true') {
+    commishMode = true;
+  }
+
+  function faceImg(name, size) {
+    var p = PMAP[name];
+    if (!p) return '<span class="slot-empty"></span>';
+    var s = size || 28;
+    return '<img src="' + p.face + '" alt="' + name + '" style="width:'+s+'px;height:'+s+'px;border-radius:50%;object-fit:cover;">';
+  }
+
+  function faceCard(name, opts) {
+    var p = PMAP[name];
+    if (!p) return '';
+    var draggable = opts && opts.draggable;
+    var cls = 'team-face' + (draggable ? ' draggable' : '');
+    var safeName = name.replace(/'/g, "\\'");
+    var attr = draggable ? ' draggable="true" ondragstart="tourneyDragStart(event,\'' + safeName + '\')" ondragend="tourneyDragEnd(event)"' : '';
+    return '<div class="' + cls + '"' + attr + ' data-player="' + name + '">' +
+      '<div class="team-face-hcp">HCP ' + p.hcp.toFixed(1) + '</div>' +
+      '<img src="' + p.face + '" alt="' + name + '">' +
+      '<div class="team-face-name">' + p.short.replace(' ','<br>') + '</div></div>';
+  }
+
+  // ---- DRAG AND DROP ----
+  var dragPlayer = null;
+  window.tourneyDragStart = function(e, name) {
+    dragPlayer = name;
+    e.dataTransfer.setData('text/plain', name);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(function() {
+      var el = e.target.closest ? e.target.closest('.team-face') : null;
+      if (el) el.classList.add('dragging');
+    }, 0);
+  };
+  window.tourneyDragEnd = function(e) {
+    document.querySelectorAll('.dragging').forEach(function(el) { el.classList.remove('dragging'); });
+    document.querySelectorAll('.drag-over,.drag-over-gold').forEach(function(el) { el.classList.remove('drag-over'); el.classList.remove('drag-over-gold'); });
+    dragPlayer = null;
+  };
+
+  function setupDropZone(el, team) {
+    el.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      el.classList.add(team === 'B' ? 'drag-over-gold' : 'drag-over');
+    });
+    el.addEventListener('dragleave', function(e) {
+      if (!el.contains(e.relatedTarget)) {
+        el.classList.remove('drag-over');
+        el.classList.remove('drag-over-gold');
+      }
+    });
+    el.addEventListener('drop', function(e) {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      el.classList.remove('drag-over-gold');
+      var name = e.dataTransfer.getData('text/plain');
+      if (!name || !commishMode) return;
+      if (team === 'pool') {
+        tourneyData.teams.teamA = tourneyData.teams.teamA.filter(function(n) { return n !== name; });
+        tourneyData.teams.teamB = tourneyData.teams.teamB.filter(function(n) { return n !== name; });
+      } else if (team === 'A') {
+        if (tourneyData.teams.teamA.indexOf(name) >= 0) return;
+        tourneyData.teams.teamB = tourneyData.teams.teamB.filter(function(n) { return n !== name; });
+        if (tourneyData.teams.teamA.length >= 6) return;
+        tourneyData.teams.teamA.push(name);
+      } else if (team === 'B') {
+        if (tourneyData.teams.teamB.indexOf(name) >= 0) return;
+        tourneyData.teams.teamA = tourneyData.teams.teamA.filter(function(n) { return n !== name; });
+        if (tourneyData.teams.teamB.length >= 6) return;
+        tourneyData.teams.teamB.push(name);
+      }
+      saveTeams();
+      renderTournament();
+    });
+  }
+
+  // ---- RENDER: TEAMS ----
+  function renderTeams() {
+    var container = document.getElementById('tournamentTeams');
+    var announcement = document.getElementById('draftAnnouncement');
+    var tA = tourneyData.teams.teamA || [];
+    var tB = tourneyData.teams.teamB || [];
+    var hasTeams = tA.length > 0 || tB.length > 0;
+
+    if (announcement) announcement.style.display = hasTeams ? 'none' : 'block';
+
+    if (!hasTeams && !commishMode) {
+      container.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+
+    // In commish mode show drag pool
+    if (commishMode) {
+      var assigned = tA.concat(tB);
+      var available = PNAMES.filter(function(n) { return assigned.indexOf(n) < 0; });
+      html += '<div style="text-align:center;font-weight:700;font-size:0.88em;color:#999;margin-bottom:6px;">Available Players (drag to a team)</div>';
+      html += '<div class="draft-pool" id="draftPool">';
+      if (available.length === 0) {
+        html += '<div style="color:#999;font-size:0.88em;padding:10px;">All players assigned!</div>';
+      } else {
+        available.forEach(function(name) { html += faceCard(name, {draggable:true}); });
+      }
+      html += '</div>';
+    }
+
+    // Two team columns
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">';
+
+    // Team A
+    html += '<div class="card"><div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">';
+    html += '<span>Team A</span>';
+    if (commishMode) {
+      html += '<select class="captain-select" onchange="setTourneyCaptain(\'A\',this.value)" style="font-size:0.78em;">';
+      html += '<option value="">Captain...</option>';
+      tA.forEach(function(n) {
+        html += '<option value="'+n+'"'+(tourneyData.teams.captainA===n?' selected':'')+'>'+PMAP[n].short+'</option>';
+      });
+      html += '</select>';
+    } else if (tourneyData.teams.captainA && PMAP[tourneyData.teams.captainA]) {
+      html += '<span style="font-size:0.78em;opacity:0.85;">Captain: '+PMAP[tourneyData.teams.captainA].short+'</span>';
+    }
+    html += '</div><div class="card-body">';
+    html += '<div class="draft-team-col" id="draftTeamA">';
+    tA.forEach(function(name) {
+      var isCaptain = name === tourneyData.teams.captainA;
+      html += '<div style="position:relative;">';
+      if (isCaptain) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:0.65em;font-weight:800;color:var(--gold);background:var(--white);padding:1px 6px;border-radius:8px;border:1px solid var(--gold);z-index:2;white-space:nowrap;">CAPTAIN</div>';
+      html += faceCard(name, {draggable: commishMode});
+      html += '</div>';
+    });
+    for (var i = tA.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
+    html += '</div></div></div>';
+
+    // Team B
+    html += '<div class="card"><div class="card-header gold" style="display:flex;justify-content:space-between;align-items:center;">';
+    html += '<span>Team B</span>';
+    if (commishMode) {
+      html += '<select class="captain-select" onchange="setTourneyCaptain(\'B\',this.value)" style="font-size:0.78em;">';
+      html += '<option value="">Captain...</option>';
+      tB.forEach(function(n) {
+        html += '<option value="'+n+'"'+(tourneyData.teams.captainB===n?' selected':'')+'>'+PMAP[n].short+'</option>';
+      });
+      html += '</select>';
+    } else if (tourneyData.teams.captainB && PMAP[tourneyData.teams.captainB]) {
+      html += '<span style="font-size:0.78em;opacity:0.85;">Captain: '+PMAP[tourneyData.teams.captainB].short+'</span>';
+    }
+    html += '</div><div class="card-body">';
+    html += '<div class="draft-team-col team-b" id="draftTeamB">';
+    tB.forEach(function(name) {
+      var isCaptain = name === tourneyData.teams.captainB;
+      html += '<div style="position:relative;">';
+      if (isCaptain) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:0.65em;font-weight:800;color:var(--gold);background:var(--white);padding:1px 6px;border-radius:8px;border:1px solid var(--gold);z-index:2;white-space:nowrap;">CAPTAIN</div>';
+      html += faceCard(name, {draggable: commishMode});
+      html += '</div>';
+    });
+    for (var i = tB.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
+    html += '</div></div></div>';
+
+    html += '</div>'; // close grid
+
+    container.innerHTML = html;
+
+    // Setup drop zones in commish mode
+    if (commishMode) {
+      var pool = document.getElementById('draftPool');
+      var teamAZone = document.getElementById('draftTeamA');
+      var teamBZone = document.getElementById('draftTeamB');
+      if (pool) setupDropZone(pool, 'pool');
+      if (teamAZone) setupDropZone(teamAZone, 'A');
+      if (teamBZone) setupDropZone(teamBZone, 'B');
+    }
+  }
+
+  window.setTourneyCaptain = function(team, name) {
+    if (team === 'A') tourneyData.teams.captainA = name;
+    else tourneyData.teams.captainB = name;
+    saveTeams();
+    renderTournament();
+  };
+
+  // ---- RENDER: SESSIONS ----
+  function renderAllSessions() {
+    var container = document.getElementById('tournamentPairings');
+    var tA = tourneyData.teams.teamA || [];
+    var tB = tourneyData.teams.teamB || [];
+    if (tA.length === 0 && tB.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+    var html = '';
+    SESSIONS.forEach(function(s) { html += renderSession(s); });
+    container.innerHTML = html;
+  }
+
+  function getSessionData(sessionKey) {
+    return tourneyData.sessions[sessionKey] || {};
+  }
+
+  function getAssignedInSession(sessionKey, excludeTee, excludeSlot, team) {
+    var sData = getSessionData(sessionKey);
+    var assigned = [];
+    var side = team === 'A' ? 'teamA' : 'teamB';
+    ['tee1','tee2','tee3'].forEach(function(teeKey) {
+      var tee = sData[teeKey];
+      if (!tee) return;
+      var arr = tee[side] || [];
+      arr.forEach(function(name, idx) {
+        if (teeKey === excludeTee && idx === excludeSlot) return;
+        if (name) assigned.push(name);
+      });
+    });
+    return assigned;
+  }
+
+  function renderSession(s) {
+    var sData = getSessionData(s.key);
+    var tA = tourneyData.teams.teamA || [];
+    var tB = tourneyData.teams.teamB || [];
+
+    var html = '<div class="session-card"><div class="card">';
+    html += '<div class="card-header blue"><span>' + s.label + ' &mdash; ' + s.course + '</span>';
+    html += '<span class="session-badge">' + s.format + ' ' + s.type.toUpperCase() + '</span></div>';
+    html += '<div class="card-body">';
+
+    if (s.type === '2v2') {
+      s.tees.forEach(function(time, ti) {
+        var teeKey = 'tee' + (ti+1);
+        var tee = sData[teeKey] || { teamA: ['',''], teamB: ['',''] };
+        var aPlayers = (tee.teamA || []).slice();
+        var bPlayers = (tee.teamB || []).slice();
+        while (aPlayers.length < 2) aPlayers.push('');
+        while (bPlayers.length < 2) bPlayers.push('');
+
+        html += '<div class="pairing-row">';
+        html += '<div class="pairing-time">' + time + '</div>';
+        html += '<div class="pairing-team">';
+        for (var si = 0; si < 2; si++) {
+          html += renderPlayerSlot(s.key, teeKey, 'A', si, aPlayers[si], tA);
+        }
+        html += '</div>';
+        html += '<div class="pairing-vs">vs</div>';
+        html += '<div class="pairing-team team-b">';
+        for (var si = 0; si < 2; si++) {
+          html += renderPlayerSlot(s.key, teeKey, 'B', si, bPlayers[si], tB);
+        }
+        html += '</div>';
+        html += '</div>';
+      });
+    } else {
+      // Singles: 2 matches per tee time
+      s.tees.forEach(function(time, ti) {
+        var teeKey = 'tee' + (ti+1);
+        var tee = sData[teeKey] || { teamA: ['',''], teamB: ['',''] };
+        var aPlayers = (tee.teamA || []).slice();
+        var bPlayers = (tee.teamB || []).slice();
+        while (aPlayers.length < 2) aPlayers.push('');
+        while (bPlayers.length < 2) bPlayers.push('');
+
+        // Match 1
+        html += '<div class="pairing-row">';
+        html += '<div class="pairing-time">' + time + '</div>';
+        html += '<div class="pairing-team">';
+        html += renderPlayerSlot(s.key, teeKey, 'A', 0, aPlayers[0], tA);
+        html += '</div>';
+        html += '<div class="pairing-vs">vs</div>';
+        html += '<div class="pairing-team team-b">';
+        html += renderPlayerSlot(s.key, teeKey, 'B', 0, bPlayers[0], tB);
+        html += '</div>';
+        html += '</div>';
+
+        // Match 2
+        html += '<div class="pairing-row">';
+        html += '<div class="pairing-time" style="opacity:0.3;">' + time + '</div>';
+        html += '<div class="pairing-team">';
+        html += renderPlayerSlot(s.key, teeKey, 'A', 1, aPlayers[1], tA);
+        html += '</div>';
+        html += '<div class="pairing-vs">vs</div>';
+        html += '<div class="pairing-team team-b">';
+        html += renderPlayerSlot(s.key, teeKey, 'B', 1, bPlayers[1], tB);
+        html += '</div>';
+        html += '</div>';
+      });
+    }
+
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function canEditSide(team) {
+    if (commishMode) return true;
+    // Captains can edit their own team
+    var captainName = team === 'A' ? tourneyData.teams.captainA : tourneyData.teams.captainB;
+    if (captainName && localStorage.getItem('bandon_tourney_captain') === captainName) return true;
+    return false;
+  }
+
+  function renderPlayerSlot(sessionKey, teeKey, team, slotIdx, currentVal, roster) {
+    var canEdit = canEditSide(team);
+
+    if (canEdit) {
+      var assigned = getAssignedInSession(sessionKey, teeKey, slotIdx, team);
+      var available = roster.filter(function(n) { return assigned.indexOf(n) < 0; });
+      var html = '<div class="pairing-player">';
+      if (currentVal && PMAP[currentVal]) html += faceImg(currentVal);
+      else html += '<span class="slot-empty"></span>';
+      html += '<select onchange="setTourneyPairing(\'' + sessionKey + '\',\'' + teeKey + '\',\'' + team + '\',' + slotIdx + ',this.value)">';
+      html += '<option value="">--</option>';
+      available.forEach(function(n) {
+        var p = PMAP[n];
+        html += '<option value="' + n + '"' + (n === currentVal ? ' selected' : '') + '>' + p.short + ' (' + p.hcp.toFixed(1) + ')</option>';
+      });
+      // Keep current value visible even if it's already selected
+      if (currentVal && available.indexOf(currentVal) < 0 && PMAP[currentVal]) {
+        var p = PMAP[currentVal];
+        html += '<option value="' + currentVal + '" selected>' + p.short + ' (' + p.hcp.toFixed(1) + ')</option>';
+      }
+      html += '</select></div>';
+      return html;
+    } else {
+      if (currentVal && PMAP[currentVal]) {
+        var p = PMAP[currentVal];
+        return '<div class="pairing-player">' + faceImg(currentVal) + ' ' + p.short + '</div>';
+      }
+      return '<div class="pairing-player"><span class="slot-empty"></span> <span style="color:#ccc;font-size:0.82em;">TBD</span></div>';
+    }
+  }
+
+  window.setTourneyPairing = function(sessionKey, teeKey, team, slotIdx, playerName) {
+    if (!tourneyData.sessions[sessionKey]) tourneyData.sessions[sessionKey] = {};
+    if (!tourneyData.sessions[sessionKey][teeKey]) {
+      tourneyData.sessions[sessionKey][teeKey] = { teamA: ['',''], teamB: ['',''] };
+    }
+    var side = team === 'A' ? 'teamA' : 'teamB';
+    var arr = tourneyData.sessions[sessionKey][teeKey][side];
+    while (arr.length <= slotIdx) arr.push('');
+    arr[slotIdx] = playerName;
+
+    // Save to Firebase
+    fetch(DB_URL + '/tournament/sessions/' + sessionKey + '/' + teeKey + '.json', {
+      method: 'PUT',
+      body: JSON.stringify(tourneyData.sessions[sessionKey][teeKey])
+    }).catch(function(){});
+
+    renderTournament();
+  };
+
+  // ---- SAVE / LOAD ----
+  function saveTeams() {
+    fetch(DB_URL + '/tournament/teams.json', {
+      method: 'PUT',
+      body: JSON.stringify(tourneyData.teams)
+    }).catch(function(){});
+  }
+
+  function loadFromFirebase(callback) {
+    fetch(DB_URL + '/tournament.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data) {
+          if (data.teams) {
+            tourneyData.teams = {
+              teamA: data.teams.teamA || [],
+              teamB: data.teams.teamB || [],
+              captainA: data.teams.captainA || '',
+              captainB: data.teams.captainB || '',
+              draftComplete: data.teams.draftComplete || false
+            };
+          }
+          if (data.sessions) tourneyData.sessions = data.sessions;
+        }
+        if (callback) callback();
+      }).catch(function() { if (callback) callback(); });
+  }
+
+  // ---- COMMISSIONER MODE ----
+  window.toggleTourneyCommish = function() {
+    if (commishMode) {
+      commishMode = false;
+      localStorage.removeItem('bandon_tourney_commish');
+      document.getElementById('tourneyCommishBar').classList.remove('active');
+      document.getElementById('tourneyCommishLabel').innerHTML = '&#9917; Commissioner Mode';
+      document.getElementById('tourneyCommishBtn').textContent = 'Unlock';
+      document.getElementById('tourneyCommishBtn').classList.remove('locked');
+      renderTournament();
+    } else {
+      document.getElementById('tourneyCommishModal').classList.add('open');
+      document.getElementById('tourneyCommishPw').value = '';
+      document.getElementById('tourneyCommishError').style.display = 'none';
+      setTimeout(function() { document.getElementById('tourneyCommishPw').focus(); }, 100);
+    }
+  };
+
+  window.submitTourneyCommishPw = function() {
+    var pw = document.getElementById('tourneyCommishPw').value;
+    if (hashPw(pw) === COMMISH_HASH) {
+      commishMode = true;
+      localStorage.setItem('bandon_tourney_commish', 'true');
+      document.getElementById('tourneyCommishModal').classList.remove('open');
+      document.getElementById('tourneyCommishBar').classList.add('active');
+      document.getElementById('tourneyCommishLabel').innerHTML = '&#9917; Commissioner Mode <strong style="color:var(--gold);">ACTIVE</strong>';
+      document.getElementById('tourneyCommishBtn').textContent = 'Lock';
+      document.getElementById('tourneyCommishBtn').classList.add('locked');
+      renderTournament();
+    } else {
+      document.getElementById('tourneyCommishError').style.display = 'block';
+    }
+  };
+
+  window.closeTourneyCommishModal = function() {
+    document.getElementById('tourneyCommishModal').classList.remove('open');
+  };
+
+  // ---- MAIN RENDER ----
+  function renderTournament() {
+    renderTeams();
+    renderAllSessions();
+  }
+
+  // Initial load
+  loadFromFirebase(function() {
+    renderTournament();
+    if (commishMode) {
+      document.getElementById('tourneyCommishBar').classList.add('active');
+      document.getElementById('tourneyCommishLabel').innerHTML = '&#9917; Commissioner Mode <strong style="color:var(--gold);">ACTIVE</strong>';
+      document.getElementById('tourneyCommishBtn').textContent = 'Lock';
+      document.getElementById('tourneyCommishBtn').classList.add('locked');
+    }
+  });
+
+  // Poll every 10 seconds
+  setInterval(function() {
+    loadFromFirebase(function() { renderTournament(); });
+  }, 10000);
+})();
+
 </script>
 
 <!-- Image lightbox overlay -->
