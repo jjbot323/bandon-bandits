@@ -893,11 +893,12 @@
     width: 28px; height: 28px; border-radius: 50%; border: 2px dashed #ccc;
     display: inline-block; background: #f5f5f5;
   }
-  .captain-select {
-    padding: 6px 10px; border: 2px solid var(--gold); border-radius: 8px;
-    font-size: 0.88em; font-weight: 700; cursor: pointer; background: var(--white);
+  .captain-drop-zone {
+    transition: background 0.2s, border-color 0.2s;
   }
-  .captain-select:focus { outline: none; border-color: var(--green); }
+  .captain-drop-zone.drag-over, .captain-drop-zone.drag-over-gold {
+    background: rgba(201,168,76,0.15) !important; border-color: var(--gold) !important; border-style: solid !important;
+  }
   .team-header-row {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     margin-bottom: 8px; font-weight: 800; font-size: 1em; color: var(--green-dark);
@@ -1939,6 +1940,7 @@
       <div class="commish-bar" id="tourneyCommishBar" style="margin-bottom: 20px;">
         <span id="tourneyCommishLabel" style="color:#999;">&#9917; Commissioner Mode</span>
         <button class="commish-btn" id="tourneyCommishBtn" onclick="toggleTourneyCommish()">Unlock</button>
+        <button class="commish-btn locked" id="tourneyResetBtn" onclick="resetTourneyTeams()" style="display:none;margin-left:8px;font-size:0.78em;">Reset Teams</button>
       </div>
 
       <!-- Commissioner password modal for tournament -->
@@ -3494,23 +3496,45 @@ function showPage(pageId) {
       el.classList.remove('drag-over-gold');
       var name = e.dataTransfer.getData('text/plain');
       if (!name || !commishMode) return;
+      // Check if this is a captain drop zone
+      if (team === 'capA' || team === 'capB') {
+        var side = team === 'capA' ? 'A' : 'B';
+        var roster = side === 'A' ? tourneyData.teams.teamA : tourneyData.teams.teamB;
+        if (roster.indexOf(name) < 0) return; // must be on this team
+        if (side === 'A') tourneyData.teams.captainA = name;
+        else tourneyData.teams.captainB = name;
+        saveTeams();
+        renderTournament();
+        return;
+      }
       if (team === 'pool') {
         tourneyData.teams.teamA = tourneyData.teams.teamA.filter(function(n) { return n !== name; });
         tourneyData.teams.teamB = tourneyData.teams.teamB.filter(function(n) { return n !== name; });
+        // Clear captain if removed
+        if (tourneyData.teams.captainA === name) tourneyData.teams.captainA = '';
+        if (tourneyData.teams.captainB === name) tourneyData.teams.captainB = '';
       } else if (team === 'A') {
         if (tourneyData.teams.teamA.indexOf(name) >= 0) return;
         tourneyData.teams.teamB = tourneyData.teams.teamB.filter(function(n) { return n !== name; });
+        if (tourneyData.teams.captainB === name) tourneyData.teams.captainB = '';
         if (tourneyData.teams.teamA.length >= 6) return;
         tourneyData.teams.teamA.push(name);
       } else if (team === 'B') {
         if (tourneyData.teams.teamB.indexOf(name) >= 0) return;
         tourneyData.teams.teamA = tourneyData.teams.teamA.filter(function(n) { return n !== name; });
+        if (tourneyData.teams.captainA === name) tourneyData.teams.captainA = '';
         if (tourneyData.teams.teamB.length >= 6) return;
         tourneyData.teams.teamB.push(name);
       }
       saveTeams();
       renderTournament();
     });
+  }
+
+  function teamHcp(roster) {
+    var total = 0;
+    roster.forEach(function(name) { if (PMAP[name]) total += PMAP[name].hcp; });
+    return total;
   }
 
   // ---- RENDER: TEAMS ----
@@ -3521,6 +3545,7 @@ function showPage(pageId) {
     var tB = tourneyData.teams.teamB || [];
     var hasTeams = tA.length > 0 || tB.length > 0;
 
+    // Hide "TBD" only when teams exist
     if (announcement) announcement.style.display = hasTeams ? 'none' : 'block';
 
     if (!hasTeams && !commishMode) {
@@ -3548,19 +3573,26 @@ function showPage(pageId) {
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">';
 
     // Team A
+    var hcpA = teamHcp(tA);
     html += '<div class="card"><div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">';
     html += '<span>Team A</span>';
-    if (commishMode) {
-      html += '<select class="captain-select" onchange="setTourneyCaptain(\'A\',this.value)" style="font-size:0.78em;">';
-      html += '<option value="">Captain...</option>';
-      tA.forEach(function(n) {
-        html += '<option value="'+n+'"'+(tourneyData.teams.captainA===n?' selected':'')+'>'+PMAP[n].short+'</option>';
-      });
-      html += '</select>';
-    } else if (tourneyData.teams.captainA && PMAP[tourneyData.teams.captainA]) {
-      html += '<span style="font-size:0.78em;opacity:0.85;">Captain: '+PMAP[tourneyData.teams.captainA].short+'</span>';
-    }
+    if (tA.length > 0) html += '<span style="font-size:0.78em;opacity:0.85;">Combined HCP: ' + hcpA.toFixed(1) + '</span>';
     html += '</div><div class="card-body">';
+
+    // Captain drop zone
+    html += '<div style="text-align:center;margin-bottom:10px;">';
+    if (tourneyData.teams.captainA && PMAP[tourneyData.teams.captainA]) {
+      var capA = PMAP[tourneyData.teams.captainA];
+      html += '<div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fff8e1,#fff3cd);border:2px solid var(--gold);border-radius:10px;padding:6px 14px;">';
+      html += faceImg(capA.name, 32) + ' <span style="font-weight:800;font-size:0.88em;color:var(--green-dark);">Captain: ' + capA.short + '</span>';
+      html += '</div>';
+    } else if (commishMode && tA.length > 0) {
+      html += '<div class="captain-drop-zone" id="capDropA" style="border:2px dashed var(--gold);border-radius:10px;padding:8px 16px;color:#bbb;font-size:0.82em;font-weight:700;">Drag a team member here to set Captain</div>';
+    } else {
+      html += '<div style="font-size:0.82em;color:#bbb;">Captain TBD</div>';
+    }
+    html += '</div>';
+
     html += '<div class="draft-team-col" id="draftTeamA">';
     tA.forEach(function(name) {
       var isCaptain = name === tourneyData.teams.captainA;
@@ -3569,23 +3601,32 @@ function showPage(pageId) {
       html += faceCard(name, {draggable: commishMode});
       html += '</div>';
     });
-    for (var i = tA.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
+    if (commishMode) {
+      for (var i = tA.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
+    }
     html += '</div></div></div>';
 
     // Team B
+    var hcpB = teamHcp(tB);
     html += '<div class="card"><div class="card-header gold" style="display:flex;justify-content:space-between;align-items:center;">';
     html += '<span>Team B</span>';
-    if (commishMode) {
-      html += '<select class="captain-select" onchange="setTourneyCaptain(\'B\',this.value)" style="font-size:0.78em;">';
-      html += '<option value="">Captain...</option>';
-      tB.forEach(function(n) {
-        html += '<option value="'+n+'"'+(tourneyData.teams.captainB===n?' selected':'')+'>'+PMAP[n].short+'</option>';
-      });
-      html += '</select>';
-    } else if (tourneyData.teams.captainB && PMAP[tourneyData.teams.captainB]) {
-      html += '<span style="font-size:0.78em;opacity:0.85;">Captain: '+PMAP[tourneyData.teams.captainB].short+'</span>';
-    }
+    if (tB.length > 0) html += '<span style="font-size:0.78em;opacity:0.85;">Combined HCP: ' + hcpB.toFixed(1) + '</span>';
     html += '</div><div class="card-body">';
+
+    // Captain drop zone
+    html += '<div style="text-align:center;margin-bottom:10px;">';
+    if (tourneyData.teams.captainB && PMAP[tourneyData.teams.captainB]) {
+      var capB = PMAP[tourneyData.teams.captainB];
+      html += '<div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fff8e1,#fff3cd);border:2px solid var(--gold);border-radius:10px;padding:6px 14px;">';
+      html += faceImg(capB.name, 32) + ' <span style="font-weight:800;font-size:0.88em;color:var(--green-dark);">Captain: ' + capB.short + '</span>';
+      html += '</div>';
+    } else if (commishMode && tB.length > 0) {
+      html += '<div class="captain-drop-zone" id="capDropB" style="border:2px dashed var(--gold);border-radius:10px;padding:8px 16px;color:#bbb;font-size:0.82em;font-weight:700;">Drag a team member here to set Captain</div>';
+    } else {
+      html += '<div style="font-size:0.82em;color:#bbb;">Captain TBD</div>';
+    }
+    html += '</div>';
+
     html += '<div class="draft-team-col team-b" id="draftTeamB">';
     tB.forEach(function(name) {
       var isCaptain = name === tourneyData.teams.captainB;
@@ -3594,28 +3635,37 @@ function showPage(pageId) {
       html += faceCard(name, {draggable: commishMode});
       html += '</div>';
     });
-    for (var i = tB.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
+    if (commishMode) {
+      for (var i = tB.length; i < 6; i++) html += '<div class="draft-empty-slot">+</div>';
+    }
     html += '</div></div></div>';
 
     html += '</div>'; // close grid
 
     container.innerHTML = html;
 
-    // Setup drop zones in commish mode
+    // Setup drop zones
     if (commishMode) {
       var pool = document.getElementById('draftPool');
       var teamAZone = document.getElementById('draftTeamA');
       var teamBZone = document.getElementById('draftTeamB');
+      var capDropA = document.getElementById('capDropA');
+      var capDropB = document.getElementById('capDropB');
       if (pool) setupDropZone(pool, 'pool');
       if (teamAZone) setupDropZone(teamAZone, 'A');
       if (teamBZone) setupDropZone(teamBZone, 'B');
+      if (capDropA) setupDropZone(capDropA, 'capA');
+      if (capDropB) setupDropZone(capDropB, 'capB');
     }
   }
 
-  window.setTourneyCaptain = function(team, name) {
-    if (team === 'A') tourneyData.teams.captainA = name;
-    else tourneyData.teams.captainB = name;
-    saveTeams();
+  // Reset all teams and pairings (commissioner only)
+  window.resetTourneyTeams = function() {
+    if (!commishMode) return;
+    if (!confirm('Reset all teams and pairings? This cannot be undone.')) return;
+    tourneyData.teams = { teamA: [], teamB: [], captainA: '', captainB: '', draftComplete: false };
+    tourneyData.sessions = {};
+    fetch(DB_URL + '/tournament.json', { method: 'PUT', body: JSON.stringify(null) }).catch(function(){});
     renderTournament();
   };
 
@@ -3814,14 +3864,31 @@ function showPage(pageId) {
   }
 
   // ---- COMMISSIONER MODE ----
+  function updateCommishUI() {
+    var bar = document.getElementById('tourneyCommishBar');
+    var label = document.getElementById('tourneyCommishLabel');
+    var btn = document.getElementById('tourneyCommishBtn');
+    var resetBtn = document.getElementById('tourneyResetBtn');
+    if (commishMode) {
+      bar.classList.add('active');
+      label.innerHTML = '&#9917; Commissioner Mode <strong style="color:var(--gold);">ACTIVE</strong>';
+      btn.textContent = 'Lock';
+      btn.classList.add('locked');
+      if (resetBtn) resetBtn.style.display = 'inline-block';
+    } else {
+      bar.classList.remove('active');
+      label.innerHTML = '&#9917; Commissioner Mode';
+      btn.textContent = 'Unlock';
+      btn.classList.remove('locked');
+      if (resetBtn) resetBtn.style.display = 'none';
+    }
+  }
+
   window.toggleTourneyCommish = function() {
     if (commishMode) {
       commishMode = false;
       localStorage.removeItem('bandon_tourney_commish');
-      document.getElementById('tourneyCommishBar').classList.remove('active');
-      document.getElementById('tourneyCommishLabel').innerHTML = '&#9917; Commissioner Mode';
-      document.getElementById('tourneyCommishBtn').textContent = 'Unlock';
-      document.getElementById('tourneyCommishBtn').classList.remove('locked');
+      updateCommishUI();
       renderTournament();
     } else {
       document.getElementById('tourneyCommishModal').classList.add('open');
@@ -3837,10 +3904,7 @@ function showPage(pageId) {
       commishMode = true;
       localStorage.setItem('bandon_tourney_commish', 'true');
       document.getElementById('tourneyCommishModal').classList.remove('open');
-      document.getElementById('tourneyCommishBar').classList.add('active');
-      document.getElementById('tourneyCommishLabel').innerHTML = '&#9917; Commissioner Mode <strong style="color:var(--gold);">ACTIVE</strong>';
-      document.getElementById('tourneyCommishBtn').textContent = 'Lock';
-      document.getElementById('tourneyCommishBtn').classList.add('locked');
+      updateCommishUI();
       renderTournament();
     } else {
       document.getElementById('tourneyCommishError').style.display = 'block';
@@ -3860,12 +3924,7 @@ function showPage(pageId) {
   // Initial load
   loadFromFirebase(function() {
     renderTournament();
-    if (commishMode) {
-      document.getElementById('tourneyCommishBar').classList.add('active');
-      document.getElementById('tourneyCommishLabel').innerHTML = '&#9917; Commissioner Mode <strong style="color:var(--gold);">ACTIVE</strong>';
-      document.getElementById('tourneyCommishBtn').textContent = 'Lock';
-      document.getElementById('tourneyCommishBtn').classList.add('locked');
-    }
+    updateCommishUI();
   });
 
   // Poll every 10 seconds
