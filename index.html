@@ -1907,22 +1907,6 @@
     <div class="card-header blue">The Bandon Bandit Cup &mdash; 6v6 Team Match</div>
     <div class="card-body" style="text-align: center;">
 
-      <!-- ALL 12 PLAYERS -->
-      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 20px;">
-        <div class="team-face"><div class="team-face-hcp">HCP 4.3</div><img src="Faces/Alec_B_face.jpg" alt="Alec Bove"><div class="team-face-name">Alec<br>Bove</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 13.7</div><img src="Faces/Ben_H_face.jpg" alt="Ben Harrison"><div class="team-face-name">Ben<br>Harrison</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 11.7</div><img src="Faces/Brady_G_face.jpg" alt="Brady Gayle"><div class="team-face-name">Brady<br>Gayle</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 16.1</div><img src="Faces/Cain_C_face.jpg" alt="Cain Cody"><div class="team-face-name">Cain<br>Cody</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 10.0</div><img src="Faces/Camden_C_face.jpg" alt="Camden Cooper"><div class="team-face-name">Camden<br>Cooper</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 2.3</div><img src="Faces/Collin_H_face.jpg" alt="Collin Horner"><div class="team-face-name">Collin<br>Horner</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 16.8</div><img src="Faces/Harrison_H_face.jpg" alt="Harrison Hancock"><div class="team-face-name">Harrison<br>Hancock</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 3.6</div><img src="Faces/John_A_face.jpg" alt="John Armes"><div class="team-face-name">John<br>Armes</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 14.1</div><img src="Faces/John_G_face.jpg" alt="John Gressett"><div class="team-face-name">John<br>Gressett</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 15.0</div><img src="Faces/Josh_J_face.jpg" alt="Josh John"><div class="team-face-name">Josh<br>John</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 15.0</div><img src="Faces/Stephen_W_face.jpg" alt="Stephen Wheatcroft"><div class="team-face-name">Stephen<br>Wheatcroft</div></div>
-        <div class="team-face"><div class="team-face-hcp">HCP 11.7</div><img src="Faces/Will_H_face.jpg" alt="Will Hayward"><div class="team-face-name">Will<br>Hayward</div></div>
-      </div>
-
       <!-- DRAFT ANNOUNCEMENT (shown when no teams set) -->
       <div id="draftAnnouncement" style="background: linear-gradient(135deg, #e8dfc8, #f0e8d0); border: 2px solid var(--gold); border-radius: 10px; padding: 18px 24px; margin-bottom: 24px; text-align: center;">
         <div style="font-size: 1.4em; margin-bottom: 6px;">&#127942;</div>
@@ -3455,10 +3439,13 @@ function showPage(pageId) {
     var cls = 'team-face' + (draggable ? ' draggable' : '');
     var safeName = name.replace(/'/g, "\\'");
     var attr = draggable ? ' draggable="true" ondragstart="tourneyDragStart(event,\'' + safeName + '\')" ondragend="tourneyDragEnd(event)"' : '';
+    var parts = name.split(' ');
+    var firstName = parts[0];
+    var lastName = parts.slice(1).join(' ');
     return '<div class="' + cls + '"' + attr + ' data-player="' + name + '">' +
       '<div class="team-face-hcp">HCP ' + p.hcp.toFixed(1) + '</div>' +
       '<img src="' + p.face + '" alt="' + name + '">' +
-      '<div class="team-face-name">' + p.short.replace(' ','<br>') + '</div></div>';
+      '<div class="team-face-name">' + firstName + '<br>' + lastName + '</div></div>';
   }
 
   // ---- DRAG AND DROP ----
