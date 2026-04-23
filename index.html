@@ -3753,6 +3753,42 @@ function showPage(pageId) {
     return assigned;
   }
 
+  // Get all assigned players in a session (both teams, all tees)
+  function getAllAssignedInSession(sessionKey) {
+    var sData = getSessionData(sessionKey);
+    var assigned = [];
+    ['tee1','tee2','tee3'].forEach(function(teeKey) {
+      var tee = sData[teeKey];
+      if (!tee) return;
+      (tee.teamA || []).concat(tee.teamB || []).forEach(function(n) {
+        if (n) assigned.push(n);
+      });
+    });
+    return assigned;
+  }
+
+  function renderSessionPool(sessionKey, roster, team, label) {
+    var canEdit = canEditSide(team);
+    if (!canEdit || roster.length === 0) return '';
+    var assigned = getAllAssignedInSession(sessionKey).filter(function(n) { return roster.indexOf(n) >= 0; });
+    var available = roster.filter(function(n) { return assigned.indexOf(n) < 0; });
+    if (available.length === 0) return '';
+    var html = '<div style="margin-bottom:4px;">';
+    html += '<div style="font-size:0.68em;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">' + label + ' &mdash; Available</div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+    available.forEach(function(name) {
+      var p = PMAP[name];
+      if (!p) return;
+      html += '<div class="session-pool-face" draggable="true" data-player="' + name + '" data-team="' + team + '" data-session="' + sessionKey + '" ' +
+        'ondragstart="sessionDragStart(event,\'' + name.replace(/'/g, "\\'") + '\',\'' + team + '\',\'' + sessionKey + '\')" ' +
+        'style="display:flex;flex-direction:column;align-items:center;cursor:grab;width:44px;">' +
+        '<img src="' + p.face + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ' + (team === 'A' ? 'var(--green)' : 'var(--gold)') + ';">' +
+        '<span style="font-size:0.62em;text-align:center;line-height:1.1;margin-top:2px;">' + p.short.split(' ')[0] + '</span></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
   function renderSession(s) {
     var sData = getSessionData(s.key);
     var tA = tourneyData.teams.teamA || [];
@@ -3762,6 +3798,16 @@ function showPage(pageId) {
     html += '<div class="card-header blue"><span>' + s.label + ' &mdash; ' + s.course + '</span>';
     html += '<span class="session-badge">' + s.format + ' ' + s.type.toUpperCase() + '</span></div>';
     html += '<div class="card-body">';
+
+    // Available player pools
+    var poolA = renderSessionPool(s.key, tA, 'A', 'Team 1');
+    var poolB = renderSessionPool(s.key, tB, 'B', 'Team 2');
+    if (poolA || poolB) {
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:8px;background:var(--sand);border-radius:8px;">';
+      html += '<div>' + poolA + '</div>';
+      html += '<div>' + poolB + '</div>';
+      html += '</div>';
+    }
 
     if (s.type === '2v2') {
       s.tees.forEach(function(time, ti) {
@@ -3845,9 +3891,12 @@ function showPage(pageId) {
     if (canEdit) {
       var assigned = getAssignedInSession(sessionKey, teeKey, slotIdx, team);
       var available = roster.filter(function(n) { return assigned.indexOf(n) < 0; });
-      var html = '<div class="pairing-player">';
+      var dropAttrs = 'ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--gold)\'" ' +
+        'ondragleave="this.style.outline=\'none\'" ' +
+        'ondrop="sessionSlotDrop(event,\'' + sessionKey + '\',\'' + teeKey + '\',\'' + team + '\',' + slotIdx + ');this.style.outline=\'none\'"';
+      var html = '<div class="pairing-player" ' + dropAttrs + '>';
       if (currentVal && PMAP[currentVal]) html += faceImg(currentVal);
-      else html += '<span class="slot-empty"></span>';
+      else html += '<span class="slot-empty" style="width:28px;height:28px;display:inline-block;border:2px dashed #ccc;border-radius:50;"></span>';
       html += '<select onchange="setTourneyPairing(\'' + sessionKey + '\',\'' + teeKey + '\',\'' + team + '\',' + slotIdx + ',this.value)">';
       html += '<option value="">--</option>';
       available.forEach(function(n) {
@@ -3887,6 +3936,23 @@ function showPage(pageId) {
     }).catch(function(){});
 
     renderTournament();
+  };
+
+  // ---- SESSION DRAG/DROP ----
+  window.sessionDragStart = function(e, name, team, sessionKey) {
+    e.dataTransfer.setData('text/plain', name);
+    e.dataTransfer.setData('session-team', team);
+    e.dataTransfer.setData('session-key', sessionKey);
+  };
+
+  window.sessionSlotDrop = function(e, sessionKey, teeKey, team, slotIdx) {
+    e.preventDefault();
+    var name = e.dataTransfer.getData('text/plain');
+    var dragTeam = e.dataTransfer.getData('session-team');
+    if (!name || !PMAP[name]) return;
+    // Only allow dropping onto the matching team side
+    if (dragTeam && dragTeam !== team) return;
+    setTourneyPairing(sessionKey, teeKey, team, slotIdx, name);
   };
 
   // ---- SAVE / LOAD ----
