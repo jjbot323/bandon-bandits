@@ -4104,7 +4104,8 @@ function showPage(pageId) {
 
     // Singles table
     html += '<div class="pb-section"><h3>Head to Head</h3>';
-    html += '<table class="pb-table"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th title="Expected holes up/down">Spread (Holes)</th></tr></thead><tbody>';
+    html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+    html += '<table class="pb-table" style="min-width:500px;"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th title="Expected holes up/down">Spread (Holes)</th></tr></thead><tbody>';
     singles.forEach(function(s) {
       var op = PB_MAP[s.opp];
       var pct = (s.prob * 100).toFixed(1);
@@ -4119,7 +4120,7 @@ function showPage(pageId) {
         '<td class="' + mlClass + '">' + s.ml + '</td>' +
         '<td style="font-size:0.85em;color:#666;">' + s.spread + '</td></tr>';
     });
-    html += '</tbody></table></div>';
+    html += '</tbody></table></div></div>';
 
     document.getElementById('playerBriefBody').innerHTML = html;
     document.getElementById('playerBriefModal').classList.add('active');
@@ -4132,22 +4133,27 @@ function showPage(pageId) {
     document.body.style.overflow = '';
   };
 
-  // Swipe support for player brief modal
+  // Swipe support — only on the header area, not the table
   (function() {
-    var modal = document.getElementById('playerBriefModal');
     var startX = 0, startY = 0;
-    modal.addEventListener('touchstart', function(e) {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
+    document.addEventListener('touchstart', function(e) {
+      var header = document.getElementById('playerBriefHeader');
+      if (header && header.contains(e.target)) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      } else {
+        startX = 0; startY = 0;
+      }
     }, {passive: true});
-    modal.addEventListener('touchend', function(e) {
+    document.addEventListener('touchend', function(e) {
+      if (!startX && !startY) return;
       var dx = e.changedTouches[0].clientX - startX;
       var dy = e.changedTouches[0].clientY - startY;
-      // Only trigger if horizontal swipe > 60px and more horizontal than vertical
       if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
         if (dx < 0) pbNavNext();
         else pbNavPrev();
       }
+      startX = 0; startY = 0;
     }, {passive: true});
   })();
 
