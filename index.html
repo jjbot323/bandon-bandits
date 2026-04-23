@@ -187,6 +187,64 @@
   }
   .modal-close:hover { background: rgba(0,0,0,0.8); }
   .modal-body { padding: 24px; }
+
+  /* Player Brief Modal */
+  .pb-header {
+    display: flex; align-items: center; gap: 18px;
+    padding: 24px; background: linear-gradient(135deg, var(--green-dark), var(--green));
+    color: white; position: relative;
+  }
+  .pb-photo {
+    width: 90px; height: 90px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--gold); flex-shrink: 0;
+  }
+  .pb-info h2 { font-size: 1.5em; margin-bottom: 2px; }
+  .pb-info .pb-hcp { font-size: 1.1em; color: var(--gold); font-weight: 700; }
+  .pb-info .pb-subtitle { font-size: 0.85em; opacity: 0.8; margin-top: 2px; }
+  .pb-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 20px;
+  }
+  .pb-stat {
+    background: var(--sand); border-radius: 10px; padding: 12px; text-align: center;
+  }
+  .pb-stat-value { font-size: 1.4em; font-weight: 800; color: var(--green-dark); }
+  .pb-stat-label { font-size: 0.7em; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .pb-section { margin-bottom: 18px; }
+  .pb-section h3 {
+    font-size: 0.95em; color: var(--green-dark); margin-bottom: 8px;
+    padding-bottom: 5px; border-bottom: 2px solid var(--gold);
+  }
+  .pb-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+  .pb-table th {
+    background: var(--sand); font-weight: 700; color: var(--green-dark);
+    font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 7px 8px; text-align: left;
+  }
+  .pb-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+  .pb-table tr:last-child td { border-bottom: none; }
+  .pb-bar {
+    height: 6px; border-radius: 3px; background: #eee; position: relative; min-width: 60px;
+  }
+  .pb-bar-fill {
+    height: 100%; border-radius: 3px; position: absolute; left: 0; top: 0;
+  }
+  .pb-ml-fav { color: var(--green); font-weight: 700; }
+  .pb-ml-dog { color: var(--red); font-weight: 700; }
+  .pb-partner-row {
+    display: flex; align-items: center; gap: 10px; padding: 6px 0;
+    border-bottom: 1px solid #eee; font-size: 0.88em;
+  }
+  .pb-partner-row:last-child { border-bottom: none; }
+  .pb-partner-face {
+    width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+  }
+  .pb-worst-row {
+    padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.85em;
+  }
+  .pb-worst-row:last-child { border-bottom: none; }
+  .pb-clickable { cursor: pointer; }
+  .pb-clickable:hover { text-decoration: underline; text-decoration-color: var(--gold); }
   .modal-stats {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 14px; margin-bottom: 22px;
@@ -902,6 +960,12 @@
     .pairing-player { font-size: 0.78em; }
     .draft-pool .team-face img, .draft-team-col .team-face img { width: 60px; height: 60px; }
     .draft-empty-slot { width: 60px; height: 80px; }
+    .pb-header { flex-direction: column; text-align: center; padding: 18px; }
+    .pb-photo { width: 70px; height: 70px; }
+    .pb-stats { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .pb-stat { padding: 8px; }
+    .pb-stat-value { font-size: 1.1em; }
+    .pb-table { font-size: 0.75em; }
   }
   :root[data-theme="dark"] .draft-pool { background: #252538; border-color: #444; }
   :root[data-theme="dark"] .draft-team-col { border-color: #444; }
@@ -2223,6 +2287,16 @@
       <div id="dinnerModalSubtitle" style="color: rgba(255,255,255,0.8); font-size: 0.9em; margin-top: 4px;"></div>
     </div>
     <div class="modal-body" id="dinnerModalBody"></div>
+  </div>
+</div>
+
+<!-- ===================== PLAYER BRIEF MODAL ===================== -->
+<div id="playerBriefModal" class="modal-overlay" onclick="if(event.target===this)closePlayerBrief()">
+  <div class="modal" style="max-width:680px;">
+    <div id="playerBriefHeader" class="pb-header">
+      <button class="modal-close" onclick="closePlayerBrief()">&times;</button>
+    </div>
+    <div class="modal-body" id="playerBriefBody"></div>
   </div>
 </div>
 
@@ -3815,6 +3889,261 @@ function showPage(pageId) {
   setInterval(function() {
     loadFromFirebase(function() { renderTournament(); });
   }, 10000);
+
+  // ---- PLAYER BRIEF: Click on face cards in tournament ----
+  document.getElementById('page-tournament').addEventListener('click', function(e) {
+    var face = e.target.closest('.team-face');
+    if (face && face.dataset.player && !e.target.closest('select')) {
+      openPlayerBrief(face.dataset.player);
+    }
+    // Also handle read-only pairing player divs
+    var pp = e.target.closest('.pairing-player');
+    if (pp && !pp.querySelector('select')) {
+      var img = pp.querySelector('img');
+      if (img && img.alt) openPlayerBrief(img.alt);
+    }
+  });
+})();
+
+// ===== PLAYER BRIEF =====
+(function() {
+  var PB_K_SINGLES = 0.17;
+  var PB_K_COMBINED = 0.09;
+  var PB_K_BESTBALL = 0.12;
+
+  // Build player data from the tournament PLAYERS array (3rd script block)
+  // We need name, hcp, face for all 12 players
+  var PB_PLAYERS = [
+    {name:'Alec Bove',     hcp:4.3,  face:'Faces/Alec_B_face.jpg',     short:'Alec B'},
+    {name:'Ben Harrison',  hcp:13.7, face:'Faces/Ben_H_face.jpg',      short:'Ben H'},
+    {name:'Brady Gayle',   hcp:11.7, face:'Faces/Brady_G_face.jpg',    short:'Brady G'},
+    {name:'Cain Cody',     hcp:16.1, face:'Faces/Cain_C_face.jpg',     short:'Cain C'},
+    {name:'Camden Cooper', hcp:8.0,  face:'Faces/Camden_C_face.jpg',   short:'Camden C'},
+    {name:'Collin Horner', hcp:2.3,  face:'Faces/Collin_H_face.jpg',   short:'Collin H'},
+    {name:'Harrison Hancock',hcp:16.8,face:'Faces/Harrison_H_face.jpg',short:'Harrison H'},
+    {name:'John Armes',    hcp:3.6,  face:'Faces/John_A_face.jpg',     short:'John A'},
+    {name:'John Gressett', hcp:14.1, face:'Faces/John_G_face.jpg',     short:'John G'},
+    {name:'Josh John',     hcp:15.0, face:'Faces/Josh_J_face.jpg',     short:'Josh J'},
+    {name:'Stephen Wheatcroft',hcp:15.0,face:'Faces/Stephen_W_face.jpg',short:'Stephen W'},
+    {name:'Will Hayward',  hcp:11.7, face:'Faces/Will_H_face.jpg',     short:'Will H'}
+  ];
+  var PB_MAP = {};
+  PB_PLAYERS.forEach(function(p) { PB_MAP[p.name] = p; });
+  var PB_NAMES = PB_PLAYERS.map(function(p) { return p.name; });
+
+  function pbWinProb(hcpA, hcpB, K) {
+    var diff = hcpA - hcpB;
+    return 1.0 / (1.0 + Math.exp(K * diff * 3.5));
+  }
+
+  function pbBBEff(h1, h2) {
+    return Math.min(h1, h2) * 0.70 + Math.max(h1, h2) * 0.30;
+  }
+
+  function pbMoneyline(p) {
+    if (p >= 0.995) return '-MAX';
+    if (p <= 0.005) return '+MAX';
+    if (p >= 0.5) return '-' + Math.round(p / (1 - p) * 100);
+    return '+' + Math.round((1 - p) / p * 100);
+  }
+
+  function pbBarColor(prob) {
+    if (prob >= 0.65) return 'var(--green)';
+    if (prob >= 0.55) return 'var(--green-light)';
+    if (prob >= 0.45) return 'var(--gold)';
+    if (prob >= 0.35) return '#e67e22';
+    return 'var(--red)';
+  }
+
+  function pbGetOthers(name) {
+    return PB_NAMES.filter(function(n) { return n !== name; });
+  }
+
+  // Combinations of 2 from an array
+  function pbCombos2(arr) {
+    var result = [];
+    for (var i = 0; i < arr.length; i++) {
+      for (var j = i + 1; j < arr.length; j++) {
+        result.push([arr[i], arr[j]]);
+      }
+    }
+    return result;
+  }
+
+  window.openPlayerBrief = function(name) {
+    var p = PB_MAP[name];
+    if (!p) return;
+
+    var others = pbGetOthers(name);
+    var hcp = p.hcp;
+
+    // --- HEADER ---
+    var header = document.getElementById('playerBriefHeader');
+    header.innerHTML =
+      '<button class="modal-close" onclick="closePlayerBrief()">&times;</button>' +
+      '<img class="pb-photo" src="' + p.face + '" alt="' + name + '">' +
+      '<div class="pb-info">' +
+        '<h2>' + name + '</h2>' +
+        '<div class="pb-hcp">Handicap: ' + hcp.toFixed(1) + '</div>' +
+        '<div class="pb-subtitle">Player Matchup Brief</div>' +
+      '</div>';
+
+    // --- COMPUTE ALL ODDS ---
+    // Singles
+    var singles = [];
+    others.forEach(function(opp) {
+      var prob = pbWinProb(hcp, PB_MAP[opp].hcp, PB_K_SINGLES);
+      singles.push({opp: opp, prob: prob, ml: pbMoneyline(prob)});
+    });
+    singles.sort(function(a, b) { return b.prob - a.prob; });
+
+    var sDog = singles.filter(function(s) { return s.prob < 0.5; }).length;
+
+    // 2v2 analysis
+    var bbDog = 0, csDog = 0, bbTotal = 0, csTotal = 0;
+    var bestPartnerBB = null, bestPartnerCS = null;
+    var worstMatchups = [];
+
+    others.forEach(function(partner) {
+      var remaining = others.filter(function(n) { return n !== partner; });
+      var oppPairs = pbCombos2(remaining);
+      var bbSum = 0, csSum = 0;
+
+      oppPairs.forEach(function(opp) {
+        var effUs = pbBBEff(hcp, PB_MAP[partner].hcp);
+        var effThem = pbBBEff(PB_MAP[opp[0]].hcp, PB_MAP[opp[1]].hcp);
+        var pBB = pbWinProb(effUs, effThem, PB_K_BESTBALL);
+        bbSum += pBB;
+        bbTotal++;
+        if (pBB < 0.5) bbDog++;
+
+        var sumUs = hcp + PB_MAP[partner].hcp;
+        var sumThem = PB_MAP[opp[0]].hcp + PB_MAP[opp[1]].hcp;
+        var pCS = pbWinProb(sumUs, sumThem, PB_K_COMBINED);
+        csSum += pCS;
+        csTotal++;
+        if (pCS < 0.5) csDog++;
+
+        // Track worst
+        if (pBB < 0.5) worstMatchups.push({fmt:'BB', partner:partner, opp:opp, prob:pBB});
+        if (pCS < 0.5) worstMatchups.push({fmt:'CS', partner:partner, opp:opp, prob:pCS});
+      });
+
+      var bbAvg = bbSum / oppPairs.length;
+      var csAvg = csSum / oppPairs.length;
+      if (!bestPartnerBB || bbAvg > bestPartnerBB.avg) bestPartnerBB = {name: partner, avg: bbAvg};
+      if (!bestPartnerCS || csAvg > bestPartnerCS.avg) bestPartnerCS = {name: partner, avg: csAvg};
+    });
+
+    worstMatchups.sort(function(a, b) { return a.prob - b.prob; });
+
+    var totalMatchups = 11 + bbTotal + csTotal;
+    var totalDog = sDog + bbDog + csDog;
+    var dogPct = (totalDog / totalMatchups * 100).toFixed(1);
+
+    // --- BUILD BODY HTML ---
+    var html = '';
+
+    // Stats row
+    html += '<div class="pb-stats">';
+    html += '<div class="pb-stat"><div class="pb-stat-value">' + dogPct + '%</div><div class="pb-stat-label">Underdog Rate</div></div>';
+    html += '<div class="pb-stat"><div class="pb-stat-value">' + totalDog + '/' + totalMatchups + '</div><div class="pb-stat-label">Underdog Matchups</div></div>';
+    html += '<div class="pb-stat"><div class="pb-stat-value">' + (singles[0] ? (singles[0].prob * 100).toFixed(0) + '%' : '-') + '</div><div class="pb-stat-label">Best Singles Win%</div></div>';
+    html += '</div>';
+
+    // Singles table
+    html += '<div class="pb-section"><h3>Singles Matchups</h3>';
+    html += '<table class="pb-table"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>Moneyline</th></tr></thead><tbody>';
+    singles.forEach(function(s) {
+      var op = PB_MAP[s.opp];
+      var pct = (s.prob * 100).toFixed(1);
+      var barW = Math.max(5, Math.min(100, s.prob * 100));
+      var mlClass = s.prob >= 0.5 ? 'pb-ml-fav' : 'pb-ml-dog';
+      html += '<tr class="pb-clickable" onclick="openPlayerBrief(\'' + s.opp.replace(/'/g, "\\'") + '\')">' +
+        '<td><img src="' + op.face + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"></td>' +
+        '<td>' + op.short + '</td>' +
+        '<td>' + op.hcp.toFixed(1) + '</td>' +
+        '<td style="font-weight:700;">' + pct + '%</td>' +
+        '<td><div class="pb-bar"><div class="pb-bar-fill" style="width:' + barW + '%;background:' + pbBarColor(s.prob) + ';"></div></div></td>' +
+        '<td class="' + mlClass + '">' + s.ml + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+
+    // Best partners
+    html += '<div class="pb-section"><h3>Best Partner</h3>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
+    // BB
+    var bbP = PB_MAP[bestPartnerBB.name];
+    html += '<div style="background:var(--sand);border-radius:10px;padding:12px;border-left:3px solid var(--gold);">' +
+      '<div style="font-size:0.75em;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Best Ball</div>' +
+      '<div class="pb-clickable" onclick="openPlayerBrief(\'' + bestPartnerBB.name.replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:8px;">' +
+      '<img src="' + bbP.face + '" class="pb-partner-face">' +
+      '<div><strong>' + bbP.short + '</strong><div style="font-size:0.8em;color:#888;">Avg win: ' + (bestPartnerBB.avg * 100).toFixed(1) + '%</div></div>' +
+      '</div></div>';
+    // CS
+    var csP = PB_MAP[bestPartnerCS.name];
+    html += '<div style="background:var(--sand);border-radius:10px;padding:12px;border-left:3px solid var(--blue);">' +
+      '<div style="font-size:0.75em;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Combined Score</div>' +
+      '<div class="pb-clickable" onclick="openPlayerBrief(\'' + bestPartnerCS.name.replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:8px;">' +
+      '<img src="' + csP.face + '" class="pb-partner-face">' +
+      '<div><strong>' + csP.short + '</strong><div style="font-size:0.8em;color:#888;">Avg win: ' + (bestPartnerCS.avg * 100).toFixed(1) + '%</div></div>' +
+      '</div></div>';
+    html += '</div></div>';
+
+    // Worst matchups (top 5)
+    if (worstMatchups.length > 0) {
+      html += '<div class="pb-section"><h3>Toughest Matchups</h3>';
+      var shown = Math.min(6, worstMatchups.length);
+      for (var i = 0; i < shown; i++) {
+        var w = worstMatchups[i];
+        var fmtLabel = w.fmt === 'BB' ? 'Best Ball' : 'Combined';
+        var pct = (w.prob * 100).toFixed(1);
+        var wPartner = PB_MAP[w.partner];
+        var wOpp0 = PB_MAP[w.opp[0]];
+        var wOpp1 = PB_MAP[w.opp[1]];
+        html += '<div class="pb-worst-row">' +
+          '<span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:0.72em;font-weight:700;background:' +
+          (w.fmt === 'BB' ? 'var(--gold);color:var(--green-dark)' : 'var(--blue);color:white') + ';">' + fmtLabel + '</span> ' +
+          'w/ <strong>' + wPartner.short + '</strong> vs <strong>' + wOpp0.short + ' + ' + wOpp1.short + '</strong> &mdash; ' +
+          '<span class="pb-ml-dog">' + pct + '% (' + pbMoneyline(w.prob) + ')</span></div>';
+      }
+      if (worstMatchups.length > shown) {
+        html += '<div style="font-size:0.8em;color:#999;padding-top:4px;">+ ' + (worstMatchups.length - shown) + ' more underdog matchups</div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="pb-section"><h3>Toughest Matchups</h3><div style="color:#888;font-size:0.9em;">No underdog matchups in any format.</div></div>';
+    }
+
+    document.getElementById('playerBriefBody').innerHTML = html;
+    document.getElementById('playerBriefModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closePlayerBrief = function() {
+    document.getElementById('playerBriefModal').classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  // Delegated click handler for roster table
+  var rosterTable = document.querySelector('#page-home table tbody');
+  if (rosterTable) {
+    rosterTable.addEventListener('click', function(e) {
+      var cell = e.target.closest('.player-name-cell');
+      if (!cell) {
+        // Also try clicking on td directly in the name column
+        var td = e.target.closest('td');
+        if (td) cell = td.querySelector('.player-name-cell');
+      }
+      if (!cell) return;
+      var name = cell.textContent.trim();
+      if (PB_MAP[name]) openPlayerBrief(name);
+    });
+    // Add pointer cursor to player names
+    rosterTable.querySelectorAll('.player-name-cell').forEach(function(el) {
+      el.classList.add('pb-clickable');
+    });
+  }
 })();
 
 </script>
