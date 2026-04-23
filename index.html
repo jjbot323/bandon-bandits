@@ -4053,7 +4053,7 @@ function showPage(pageId) {
 
     // Singles table
     html += '<div class="pb-section"><h3>Singles Matchups</h3>';
-    html += '<table class="pb-table"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th>Spread</th></tr></thead><tbody>';
+    html += '<table class="pb-table"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th title="Expected holes up/down">Spread (Holes)</th></tr></thead><tbody>';
     singles.forEach(function(s) {
       var op = PB_MAP[s.opp];
       var pct = (s.prob * 100).toFixed(1);
