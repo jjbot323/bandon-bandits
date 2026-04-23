@@ -1958,7 +1958,6 @@
   <div class="card">
     <div class="card-header blue">The Bandon Bandit Cup &mdash; 6v6 Team Match</div>
     <div class="card-body" style="text-align: center;">
-      <div style="font-size:0.8em;color:#888;margin-bottom:8px;font-style:italic;">Click/Tap a player to view Player Brief</div>
 
       <!-- DRAFT ANNOUNCEMENT (shown when no teams set) -->
       <div id="draftAnnouncement" style="background: linear-gradient(135deg, #e8dfc8, #f0e8d0); border: 2px solid var(--gold); border-radius: 10px; padding: 18px 24px; margin-bottom: 24px; text-align: center;">
@@ -3561,6 +3560,7 @@ function showPage(pageId) {
     // Available players pool (always visible)
     var assigned = tA.concat(tB);
     var available = PNAMES.filter(function(n) { return assigned.indexOf(n) < 0; });
+    html += '<div style="text-align:center;font-size:0.8em;color:#888;margin-bottom:8px;font-style:italic;">Click/Tap a player to view Player Brief</div>';
     html += '<div style="text-align:center;font-weight:700;font-size:0.88em;color:#999;margin-bottom:6px;">Available Players' + (commishMode ? ' (drag to a team)' : '') + '</div>';
     html += '<div class="draft-pool" id="draftPool">';
     if (available.length === 0) {
