@@ -3793,9 +3793,11 @@ function showPage(pageId) {
     available.forEach(function(name) {
       var p = PMAP[name];
       if (!p) return;
+      var safeName = name.replace(/'/g, "\\'");
       html += '<div class="session-pool-face" draggable="true" data-player="' + name + '" data-team="' + team + '" data-session="' + sessionKey + '" ' +
-        'ondragstart="sessionDragStart(event,\'' + name.replace(/'/g, "\\'") + '\',\'' + team + '\',\'' + sessionKey + '\')" ' +
-        'style="display:flex;flex-direction:column;align-items:center;cursor:grab;width:44px;">' +
+        'ondragstart="sessionDragStart(event,\'' + safeName + '\',\'' + team + '\',\'' + sessionKey + '\')" ' +
+        'onclick="sessionTapFace(\'' + safeName + '\',\'' + team + '\',\'' + sessionKey + '\')" ' +
+        'style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:44px;">' +
         '<img src="' + p.face + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ' + (team === 'A' ? 'var(--green)' : 'var(--gold)') + ';">' +
         '<span style="font-size:0.62em;text-align:center;line-height:1.1;margin-top:2px;">' + p.short.split(' ')[0] + '</span></div>';
     });
@@ -3907,7 +3909,8 @@ function showPage(pageId) {
       var available = roster.filter(function(n) { return assigned.indexOf(n) < 0; });
       var dropAttrs = 'ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--gold)\'" ' +
         'ondragleave="this.style.outline=\'none\'" ' +
-        'ondrop="sessionSlotDrop(event,\'' + sessionKey + '\',\'' + teeKey + '\',\'' + team + '\',' + slotIdx + ');this.style.outline=\'none\'"';
+        'ondrop="sessionSlotDrop(event,\'' + sessionKey + '\',\'' + teeKey + '\',\'' + team + '\',' + slotIdx + ');this.style.outline=\'none\'" ' +
+        'onclick="sessionTapSlot(\'' + sessionKey + '\',\'' + teeKey + '\',\'' + team + '\',' + slotIdx + ')"';
       var html = '<div class="pairing-player" ' + dropAttrs + '>';
       if (currentVal && PMAP[currentVal]) html += faceImg(currentVal);
       else html += '<span class="slot-empty" style="width:28px;height:28px;display:inline-block;border:2px dashed #ccc;border-radius:50;"></span>';
@@ -3952,7 +3955,38 @@ function showPage(pageId) {
     renderTournament();
   };
 
-  // ---- SESSION DRAG/DROP ----
+  // ---- SESSION DRAG/DROP + TAP-TO-ASSIGN ----
+  // Tap-to-assign state (for mobile)
+  var _tapSelected = null; // {name, team, sessionKey}
+
+  window.sessionTapFace = function(name, team, sessionKey) {
+    // If already selected, deselect
+    if (_tapSelected && _tapSelected.name === name) {
+      _tapSelected = null;
+    } else {
+      _tapSelected = {name: name, team: team, sessionKey: sessionKey};
+    }
+    // Highlight selected face
+    document.querySelectorAll('.session-pool-face').forEach(function(el) {
+      if (_tapSelected && el.dataset.player === _tapSelected.name && el.dataset.session === _tapSelected.sessionKey) {
+        el.style.outline = '3px solid var(--gold)';
+        el.style.borderRadius = '10px';
+        el.style.background = 'rgba(201,168,76,0.15)';
+      } else {
+        el.style.outline = 'none';
+        el.style.background = 'none';
+      }
+    });
+  };
+
+  window.sessionTapSlot = function(sessionKey, teeKey, team, slotIdx) {
+    if (!_tapSelected) return;
+    if (_tapSelected.team !== team) return;
+    if (_tapSelected.sessionKey !== sessionKey) return;
+    setTourneyPairing(sessionKey, teeKey, team, slotIdx, _tapSelected.name);
+    _tapSelected = null;
+  };
+
   window.sessionDragStart = function(e, name, team, sessionKey) {
     e.dataTransfer.setData('text/plain', name);
     e.dataTransfer.setData('session-team', team);
