@@ -202,7 +202,7 @@
   .pb-info .pb-hcp { font-size: 1.1em; color: var(--gold); font-weight: 700; }
   .pb-info .pb-subtitle { font-size: 0.85em; opacity: 0.8; margin-top: 2px; }
   .pb-stats {
-    display: grid; grid-template-columns: repeat(3, 1fr);
+    display: grid; grid-template-columns: repeat(2, 1fr);
     gap: 12px; margin-bottom: 20px;
   }
   .pb-stat {
@@ -962,7 +962,7 @@
     .draft-empty-slot { width: 60px; height: 80px; }
     .pb-header { flex-direction: column; text-align: center; padding: 18px; }
     .pb-photo { width: 70px; height: 70px; }
-    .pb-stats { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .pb-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
     .pb-stat { padding: 8px; }
     .pb-stat-value { font-size: 1.1em; }
     .pb-table { font-size: 0.75em; }
@@ -4048,7 +4048,6 @@ function showPage(pageId) {
     html += '<div class="pb-stats">';
     html += '<div class="pb-stat"><div class="pb-stat-value">' + dogPct + '%</div><div class="pb-stat-label">Underdog Rate</div></div>';
     html += '<div class="pb-stat"><div class="pb-stat-value">' + totalDog + '/' + totalMatchups + '</div><div class="pb-stat-label">Underdog Matchups</div></div>';
-    html += '<div class="pb-stat"><div class="pb-stat-value">' + (singles[0] ? (singles[0].prob * 100).toFixed(0) + '%' : '-') + '</div><div class="pb-stat-label">Best Singles Win%</div></div>';
     html += '</div>';
 
     // Singles table
