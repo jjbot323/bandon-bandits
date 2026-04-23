@@ -3949,12 +3949,13 @@ function showPage(pageId) {
     return '+' + Math.round((1 - p) / p * 100);
   }
 
-  function pbSpread(p) {
-    // Convert win probability to approximate holes spread over 18
-    var edge = Math.abs(p - 0.5) * 6;
-    if (edge < 0.1) return 'EVEN';
-    var sign = p >= 0.5 ? '-' : '+';
-    return sign + edge.toFixed(1);
+  function pbSpread(hcpA, hcpB) {
+    // Match play spread: ~0.55 holes per stroke of handicap difference, capped at 10
+    var diff = hcpA - hcpB;
+    var holes = Math.min(10, Math.abs(diff) * 0.55);
+    if (holes < 0.3) return 'EVEN';
+    var sign = diff <= 0 ? '-' : '+';
+    return sign + holes.toFixed(1);
   }
 
   function pbBarColor(prob) {
@@ -4009,7 +4010,7 @@ function showPage(pageId) {
     var singles = [];
     others.forEach(function(opp) {
       var prob = pbWinProb(hcp, PB_MAP[opp].hcp, PB_K_SINGLES);
-      singles.push({opp: opp, prob: prob, ml: pbMoneyline(prob), spread: pbSpread(prob)});
+      singles.push({opp: opp, prob: prob, ml: pbMoneyline(prob), spread: pbSpread(hcp, PB_MAP[opp].hcp)});
     });
     singles.sort(function(a, b) { return b.prob - a.prob; });
 
@@ -4046,8 +4047,8 @@ function showPage(pageId) {
 
     // Stats row
     html += '<div class="pb-stats">';
-    html += '<div class="pb-stat"><div class="pb-stat-value">' + dogPct + '%</div><div class="pb-stat-label">Underdog Rate</div></div>';
     html += '<div class="pb-stat"><div class="pb-stat-value">' + totalDog + '/' + totalMatchups + '</div><div class="pb-stat-label">Underdog Matchup Possibilities</div></div>';
+    html += '<div class="pb-stat"><div class="pb-stat-value">' + dogPct + '%</div><div class="pb-stat-label">Underdog Rate</div></div>';
     html += '</div>';
 
     // Singles table
