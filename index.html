@@ -223,6 +223,10 @@
   }
   .pb-table td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: center; }
   .pb-table tr:last-child td { border-bottom: none; }
+  .pb-table .pb-sticky { position: sticky; left: 0; background: var(--white); z-index: 2; }
+  .pb-table .pb-sticky-name { position: sticky; left: 32px; background: var(--white); z-index: 2; }
+  .pb-table th.pb-sticky { background: var(--sand); }
+  .pb-table th.pb-sticky-name { background: var(--sand); }
   .pb-bar {
     height: 6px; border-radius: 3px; background: #eee; position: relative; min-width: 60px;
   }
@@ -3001,6 +3005,10 @@ function showPage(pageId) {
   });
   // Scroll to top of container
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Refresh tournament data when switching to that tab
+  if (pageId === 'tournament' && typeof loadFromFirebase === 'function') {
+    loadFromFirebase(function() { renderTournament(); });
+  }
 }
 
 // ===== CADDIE GRID (Firebase Realtime Database) =====
@@ -3973,10 +3981,10 @@ function showPage(pageId) {
     updateCommishUI();
   });
 
-  // Poll every 10 seconds
+  // Poll every 3 seconds for near-live updates
   setInterval(function() {
     loadFromFirebase(function() { renderTournament(); });
-  }, 10000);
+  }, 3000);
 
   // ---- PLAYER BRIEF: Click on face cards in tournament ----
   document.getElementById('page-tournament').addEventListener('click', function(e) {
@@ -4175,15 +4183,15 @@ function showPage(pageId) {
     html += '<div class="pb-section"><h3>Head to Head</h3>';
     html += '<div class="pb-scroll-hint" style="text-align:center;font-size:0.75em;color:#aaa;margin-bottom:4px;display:none;">Scroll right for full odds &rarr;</div>';
     html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
-    html += '<table class="pb-table" style="min-width:500px;"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th title="Expected holes up/down">Spread (Holes)</th></tr></thead><tbody>';
+    html += '<table class="pb-table" style="min-width:500px;"><thead><tr><th class="pb-sticky" style="min-width:32px;"></th><th class="pb-sticky-name">Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th title="Expected holes up/down">Spread (Holes)</th></tr></thead><tbody>';
     singles.forEach(function(s) {
       var op = PB_MAP[s.opp];
       var pct = (s.prob * 100).toFixed(1);
       var barW = Math.max(5, Math.min(100, s.prob * 100));
       var mlClass = s.prob >= 0.5 ? 'pb-ml-fav' : 'pb-ml-dog';
       html += '<tr class="pb-clickable" onclick="openPlayerBrief(\'' + s.opp.replace(/'/g, "\\'") + '\')">' +
-        '<td><img src="' + op.face + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"></td>' +
-        '<td>' + op.short + '</td>' +
+        '<td class="pb-sticky"><img src="' + op.face + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"></td>' +
+        '<td class="pb-sticky-name">' + op.short + '</td>' +
         '<td>' + op.hcp.toFixed(1) + '</td>' +
         '<td style="font-weight:700;">' + pct + '%</td>' +
         '<td><div class="pb-bar"><div class="pb-bar-fill" style="width:' + barW + '%;background:' + pbBarColor(s.prob) + ';"></div></div></td>' +
