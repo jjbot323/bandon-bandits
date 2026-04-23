@@ -4047,9 +4047,21 @@ function showPage(pageId) {
 
     // Stats row
     html += '<div class="pb-stats">';
-    html += '<div class="pb-stat"><div class="pb-stat-value">' + totalDog + '/' + totalMatchups + '</div><div class="pb-stat-label">Underdog Matchup Possibilities</div></div>';
+    html += '<div class="pb-stat pb-clickable" onclick="document.getElementById(\'pbExplain\').style.display=document.getElementById(\'pbExplain\').style.display===\'block\'?\'none\':\'block\'">' +
+      '<div class="pb-stat-value">' + totalDog + '/' + totalMatchups + '</div>' +
+      '<div class="pb-stat-label">Underdog Matchup Possibilities <span style="font-size:0.85em;">&#9432;</span></div></div>';
+
+    // Explanation panel (hidden by default)
+    var explainHtml = '<div id="pbExplain" style="display:none;background:var(--sand);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:0.82em;color:var(--text);line-height:1.6;">' +
+      '<strong>How ' + totalMatchups + ' possibilities are calculated:</strong><br>' +
+      '<span style="color:var(--green-dark);font-weight:700;">11</span> Singles matchups &mdash; 1v1 against each of the other 11 players<br>' +
+      '<span style="color:var(--green-dark);font-weight:700;">495</span> Best Ball (2v2) &mdash; 11 possible partners &times; 45 opponent pairs each<br>' +
+      '<span style="color:var(--green-dark);font-weight:700;">495</span> Combined Score (2v2) &mdash; same 11 &times; 45 in a different format<br>' +
+      '<div style="margin-top:6px;color:#888;">11 + 495 + 495 = <strong>1,001</strong> total matchup configurations. ' +
+      'Of those, <strong>' + totalDog + '</strong> have ' + name + ' as the underdog (win probability &lt; 50%).</div></div>';
     html += '<div class="pb-stat"><div class="pb-stat-value">' + dogPct + '%</div><div class="pb-stat-label">Underdog Rate</div></div>';
     html += '</div>';
+    html += explainHtml;
 
     // Singles table
     html += '<div class="pb-section"><h3>Head to Head</h3>';
