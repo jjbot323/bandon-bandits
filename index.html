@@ -1056,13 +1056,6 @@
 <!-- ========================== PAGE: HOME ========================== -->
 <div id="page-home" class="page-section active">
 
-<div onclick="showPage('caddies')" style="background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; padding: 14px 20px; border-radius: 10px; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.15);" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-  <div>
-    <div style="font-weight: 800; font-size: 1em;">Submit Your Caddie Preferences</div>
-    <div style="font-size: 0.82em; opacity: 0.85; margin-top: 2px;">Head to the Caddie Picks page and lock in your choice for each round</div>
-  </div>
-  <div style="font-size: 1.4em; margin-left: 16px;">&#8594;</div>
-</div>
 
 <!-- ===================== ROW 1: ROSTER + QUICK STATS ===================== -->
 <div class="grid-2">
@@ -2073,7 +2066,7 @@
 <!-- ===================== CADDIE PREFERENCES (LIVE GRID) ===================== -->
 <div class="full-width">
   <div class="card">
-    <div class="card-header">Carry Caddie Requests <span style="font-size: 0.7em; opacity: 0.8; margin-left: 10px;">Tap to toggle &bull; Syncs live for everyone</span></div>
+    <div class="card-header">Carry Caddie Requests <span style="font-size: 0.7em; opacity: 0.8; margin-left: 10px;">&#x1F512; Picks are locked</span></div>
     <div class="card-body" style="overflow-x: auto;">
       <div class="caddie-who">
         <label for="caddieWho">I am:</label>
@@ -3115,21 +3108,9 @@ function showPage(pageId) {
     tbody.innerHTML = html + summaryRow;
   }
 
-  // Cycle through options on click
+  // Caddie picks are locked — no more changes
   window.cycleCell = function(pKey, round) {
-    const name = PLAYERS.find(p => playerKey(p) === pKey);
-    if (!name) return;
-    if (!commishMode && name !== activeUser) return;
-    const current = (data[name] && data[name][round]) || '';
-    const idx = OPTIONS.indexOf(current);
-    const next = OPTIONS[(idx + 1) % OPTIONS.length];
-    data[name][round] = next;
-    renderGrid();
-    // Save to Firebase
-    fetch(DB_URL + '/caddie/' + pKey + '/' + round + '.json', {
-      method: 'PUT',
-      body: JSON.stringify(next)
-    }).catch(() => {});
+    return; // Picks locked
   };
 
   // Load initial data
@@ -3147,7 +3128,7 @@ function showPage(pageId) {
         });
       }
       renderGrid();
-      document.getElementById('caddieStatus').textContent = 'Live \u2022 Tap any cell to change \u2022 Changes sync for everyone';
+      document.getElementById('caddieStatus').textContent = 'Caddie picks are locked \u2022 See you in Bandon!';
       // Poll for updates every 10 seconds
       setInterval(function() {
         fetch(DB_URL + '/caddie.json')
