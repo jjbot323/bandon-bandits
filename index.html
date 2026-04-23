@@ -245,6 +245,16 @@
   .pb-worst-row:last-child { border-bottom: none; }
   .pb-clickable { cursor: pointer; }
   .pb-clickable:hover { text-decoration: underline; text-decoration-color: var(--gold); }
+  .pb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.4); color: white; border: none;
+    width: 36px; height: 36px; border-radius: 50%; font-size: 1.2em;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s; z-index: 10;
+  }
+  .pb-nav:hover { background: rgba(0,0,0,0.7); }
+  .pb-nav-left { left: 10px; }
+  .pb-nav-right { right: 50px; }
   .modal-stats {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 14px; margin-bottom: 22px;
@@ -960,12 +970,18 @@
     .pairing-player { font-size: 0.78em; }
     .draft-pool .team-face img, .draft-team-col .team-face img { width: 60px; height: 60px; }
     .draft-empty-slot { width: 60px; height: 80px; }
-    .pb-header { flex-direction: column; text-align: center; padding: 18px; }
+    .pb-header { flex-direction: column; text-align: center; padding: 18px 40px; }
     .pb-photo { width: 70px; height: 70px; }
     .pb-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
     .pb-stat { padding: 8px; }
     .pb-stat-value { font-size: 1.1em; }
-    .pb-table { font-size: 0.75em; }
+    .pb-stat-label { font-size: 0.62em; }
+    .pb-table { font-size: 0.7em; }
+    .pb-table th, .pb-table td { padding: 5px 4px; }
+    .pb-bar { min-width: 30px; }
+    .pb-nav { width: 30px; height: 30px; font-size: 1em; }
+    .pb-nav-right { right: 44px; }
+    .modal-body { padding: 16px; }
   }
   :root[data-theme="dark"] .draft-pool { background: #252538; border-color: #444; }
   :root[data-theme="dark"] .draft-team-col { border-color: #444; }
@@ -3981,17 +3997,40 @@ function showPage(pageId) {
     return result;
   }
 
+  // Sort players by handicap for navigation order
+  var PB_SORTED = PB_PLAYERS.slice().sort(function(a, b) { return a.hcp - b.hcp; });
+  var PB_SORTED_NAMES = PB_SORTED.map(function(p) { return p.name; });
+
+  window.pbNavPrev = function() {
+    var idx = PB_SORTED_NAMES.indexOf(window._pbCurrentPlayer);
+    var prev = idx <= 0 ? PB_SORTED_NAMES.length - 1 : idx - 1;
+    openPlayerBrief(PB_SORTED_NAMES[prev]);
+  };
+  window.pbNavNext = function() {
+    var idx = PB_SORTED_NAMES.indexOf(window._pbCurrentPlayer);
+    var next = idx >= PB_SORTED_NAMES.length - 1 ? 0 : idx + 1;
+    openPlayerBrief(PB_SORTED_NAMES[next]);
+  };
+
   window.openPlayerBrief = function(name) {
     var p = PB_MAP[name];
     if (!p) return;
+    window._pbCurrentPlayer = name;
 
     var others = pbGetOthers(name);
     var hcp = p.hcp;
+    var idx = PB_SORTED_NAMES.indexOf(name);
+    var prevName = PB_SORTED_NAMES[idx <= 0 ? PB_SORTED_NAMES.length - 1 : idx - 1];
+    var nextName = PB_SORTED_NAMES[idx >= PB_SORTED_NAMES.length - 1 ? 0 : idx + 1];
+    var prevShort = PB_MAP[prevName].short;
+    var nextShort = PB_MAP[nextName].short;
 
     // --- HEADER ---
     var header = document.getElementById('playerBriefHeader');
     header.innerHTML =
       '<button class="modal-close" onclick="closePlayerBrief()">&times;</button>' +
+      '<button class="pb-nav pb-nav-left" onclick="event.stopPropagation();pbNavPrev()" title="' + prevShort + '">&#9664;</button>' +
+      '<button class="pb-nav pb-nav-right" onclick="event.stopPropagation();pbNavNext()" title="' + nextShort + '">&#9654;</button>' +
       '<img class="pb-photo" src="' + p.face + '" alt="' + name + '">' +
       '<div class="pb-info">' +
         '<h2>' + name + '</h2>' +
@@ -4002,7 +4041,7 @@ function showPage(pageId) {
     // --- BLURB ---
     var blurbHtml = '';
     if (p.blurb) {
-      blurbHtml = '<div style="background:var(--sand);border-left:3px solid var(--gold);padding:10px 14px;margin-bottom:16px;font-size:0.9em;color:var(--text);border-radius:0 8px 8px 0;font-style:italic;">' + p.blurb + '</div>';
+      blurbHtml = '<div style="background:var(--sand);border-left:3px solid var(--gold);padding:10px 14px;margin-bottom:16px;font-size:0.9em;color:var(--text);border-radius:0 8px 8px 0;">' + p.blurb + '</div>';
     }
 
     // --- COMPUTE ALL ODDS ---
@@ -4084,6 +4123,7 @@ function showPage(pageId) {
 
     document.getElementById('playerBriefBody').innerHTML = html;
     document.getElementById('playerBriefModal').classList.add('active');
+    document.getElementById('playerBriefModal').scrollTop = 0;
     document.body.style.overflow = 'hidden';
   };
 
@@ -4091,6 +4131,33 @@ function showPage(pageId) {
     document.getElementById('playerBriefModal').classList.remove('active');
     document.body.style.overflow = '';
   };
+
+  // Swipe support for player brief modal
+  (function() {
+    var modal = document.getElementById('playerBriefModal');
+    var startX = 0, startY = 0;
+    modal.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, {passive: true});
+    modal.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      var dy = e.changedTouches[0].clientY - startY;
+      // Only trigger if horizontal swipe > 60px and more horizontal than vertical
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) pbNavNext();
+        else pbNavPrev();
+      }
+    }, {passive: true});
+  })();
+
+  // Keyboard navigation (left/right arrows)
+  document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('playerBriefModal').classList.contains('active')) return;
+    if (e.key === 'ArrowLeft') pbNavPrev();
+    else if (e.key === 'ArrowRight') pbNavNext();
+    else if (e.key === 'Escape') closePlayerBrief();
+  });
 
   // Delegated click handler for roster table
   var rosterTable = document.querySelector('#page-home table tbody');
