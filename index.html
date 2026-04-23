@@ -2020,6 +2020,57 @@
         </div>
       </div>
 
+      <!-- MOCK DRAFT -->
+      <div class="card" id="mockDraftCard" style="margin-bottom:24px;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleMockDraft()">
+          <span>Mock Draft Simulator</span>
+          <span id="mockDraftToggle" style="font-size:0.78em;opacity:0.7;">&#9660; Expand</span>
+        </div>
+        <div id="mockDraftBody" class="card-body" style="display:none;">
+          <div style="font-size:0.85em;color:#888;margin-bottom:12px;text-align:center;">
+            Run a snake draft to preview team matchups. Local only &mdash; nothing is saved.
+          </div>
+
+          <!-- Draft order selection -->
+          <div id="mockDraftSetup" style="text-align:center;">
+            <div style="margin-bottom:10px;">
+              <label style="font-weight:700;font-size:0.88em;margin-right:8px;">Captain A:</label>
+              <select id="mockCaptainA" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:0.88em;"></select>
+              <label style="font-weight:700;font-size:0.88em;margin-left:16px;margin-right:8px;">Captain B:</label>
+              <select id="mockCaptainB" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:0.88em;"></select>
+            </div>
+            <button onclick="startMockDraft()" style="background:var(--green);color:white;border:none;padding:8px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.92em;">Start Snake Draft</button>
+          </div>
+
+          <!-- Draft board (hidden until started) -->
+          <div id="mockDraftBoard" style="display:none;">
+            <div id="mockDraftStatus" style="text-align:center;font-weight:700;font-size:1em;margin-bottom:12px;color:var(--green-dark);"></div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-bottom:16px;">
+              <div>
+                <div style="font-weight:700;text-align:center;margin-bottom:6px;color:var(--green);">Team 1</div>
+                <div id="mockTeamA" style="min-height:60px;"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div style="font-size:0.72em;color:#999;font-weight:700;">VS</div>
+              </div>
+              <div>
+                <div style="font-weight:700;text-align:center;margin-bottom:6px;color:var(--gold);">Team 2</div>
+                <div id="mockTeamB" style="min-height:60px;"></div>
+              </div>
+            </div>
+            <!-- Available pool for picking -->
+            <div id="mockPool" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px;"></div>
+            <!-- Draft log -->
+            <div id="mockDraftLog" style="font-size:0.78em;color:#888;max-height:200px;overflow-y:auto;border-top:1px solid #eee;padding-top:8px;"></div>
+            <!-- Results (shown when complete) -->
+            <div id="mockDraftResults" style="display:none;margin-top:16px;"></div>
+            <div style="text-align:center;margin-top:12px;">
+              <button onclick="resetMockDraft()" style="background:#999;color:white;border:none;padding:6px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.82em;">Reset Draft</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- SCORING -->
       <div class="scoring-note" style="margin-bottom: 20px; text-align: left;">
         <strong>Scoring:</strong> Each match is worth <strong>1 point</strong> (Win = 1, Halve = &frac12;, Loss = 0).<br>
@@ -3107,9 +3158,23 @@ function showPage(pageId) {
     tbody.innerHTML = html + summaryRow;
   }
 
-  // Caddie picks are locked — no more changes
+  // Caddie picks are locked for players — commissioner can still edit
   window.cycleCell = function(pKey, round) {
-    return; // Picks locked
+    if (!commishMode) return; // Picks locked for non-commissioners
+    // Find the player name from the key
+    var player = PLAYERS.find(p => playerKey(p) === pKey);
+    if (!player) return;
+    var current = (data[player] && data[player][round]) || 'fore';
+    var next = current === 'carry' ? 'fore' : 'carry';
+    data[player][round] = next;
+    // Save to Firebase
+    var update = {};
+    update[round] = next;
+    fetch(DB_URL + '/caddie/' + pKey + '.json', {
+      method: 'PATCH',
+      body: JSON.stringify(update)
+    }).catch(function(){});
+    renderGrid();
   };
 
   // Load initial data
@@ -3127,7 +3192,7 @@ function showPage(pageId) {
         });
       }
       renderGrid();
-      document.getElementById('caddieStatus').textContent = 'Caddie picks are locked \u2022 See you in Bandon!';
+      document.getElementById('caddieStatus').textContent = 'Caddie picks are locked \u2022 Commissioner can still edit';
       // Poll for updates every 10 seconds
       setInterval(function() {
         fetch(DB_URL + '/caddie.json')
@@ -4079,6 +4144,250 @@ function showPage(pageId) {
   setInterval(function() {
     loadFromFirebase(function() { renderTournament(); });
   }, 3000);
+
+  // ---- MOCK DRAFT SIMULATOR ----
+  var mockState = {
+    active: false,
+    teamA: [],
+    teamB: [],
+    captainA: '',
+    captainB: '',
+    currentPick: 0, // 0-indexed
+    log: []
+  };
+
+  // Snake draft order for 12 picks (6 per team): A,B,B,A,A,B,B,A,A,B,B,A
+  var SNAKE_ORDER = ['A','B','B','A','A','B','B','A','A','B','B','A'];
+
+  window.toggleMockDraft = function() {
+    var body = document.getElementById('mockDraftBody');
+    var toggle = document.getElementById('mockDraftToggle');
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      toggle.innerHTML = '&#9650; Collapse';
+      populateMockCaptains();
+    } else {
+      body.style.display = 'none';
+      toggle.innerHTML = '&#9660; Expand';
+    }
+  };
+
+  function populateMockCaptains() {
+    var selA = document.getElementById('mockCaptainA');
+    var selB = document.getElementById('mockCaptainB');
+    selA.innerHTML = '';
+    selB.innerHTML = '';
+    PNAMES.forEach(function(name) {
+      var p = PMAP[name];
+      selA.innerHTML += '<option value="' + name + '">' + p.short + ' (' + p.hcp.toFixed(1) + ')</option>';
+      selB.innerHTML += '<option value="' + name + '">' + p.short + ' (' + p.hcp.toFixed(1) + ')</option>';
+    });
+    // Default different captains
+    if (PNAMES.length >= 2) {
+      selB.value = PNAMES[1];
+    }
+  }
+
+  window.startMockDraft = function() {
+    var capA = document.getElementById('mockCaptainA').value;
+    var capB = document.getElementById('mockCaptainB').value;
+    if (capA === capB) {
+      alert('Captains must be different players!');
+      return;
+    }
+    mockState.active = true;
+    mockState.captainA = capA;
+    mockState.captainB = capB;
+    mockState.teamA = [capA];
+    mockState.teamB = [capB];
+    mockState.currentPick = 2; // Captains take picks 0 and 1
+    mockState.log = [
+      'Rd 1, Pick 1: ' + PMAP[capA].short + ' &rarr; Team 1 (Captain)',
+      'Rd 1, Pick 2: ' + PMAP[capB].short + ' &rarr; Team 2 (Captain)'
+    ];
+    document.getElementById('mockDraftSetup').style.display = 'none';
+    document.getElementById('mockDraftBoard').style.display = 'block';
+    document.getElementById('mockDraftResults').style.display = 'none';
+    renderMockDraft();
+  };
+
+  window.resetMockDraft = function() {
+    mockState.active = false;
+    mockState.teamA = [];
+    mockState.teamB = [];
+    mockState.currentPick = 0;
+    mockState.log = [];
+    document.getElementById('mockDraftSetup').style.display = 'block';
+    document.getElementById('mockDraftBoard').style.display = 'none';
+    document.getElementById('mockDraftResults').style.display = 'none';
+    populateMockCaptains();
+  };
+
+  window.mockDraftPick = function(name) {
+    if (!mockState.active) return;
+    if (mockState.currentPick >= 12) return;
+    var team = SNAKE_ORDER[mockState.currentPick];
+    if (team === 'A') {
+      mockState.teamA.push(name);
+    } else {
+      mockState.teamB.push(name);
+    }
+    var round = Math.floor(mockState.currentPick / 2) + 1;
+    var pickInRound = (mockState.currentPick % 2) + 1;
+    mockState.log.push('Rd ' + round + ', Pick ' + pickInRound + ': ' + PMAP[name].short + ' &rarr; Team ' + (team === 'A' ? '1' : '2'));
+    mockState.currentPick++;
+    renderMockDraft();
+  };
+
+  function renderMockDraft() {
+    var assigned = mockState.teamA.concat(mockState.teamB);
+    var available = PNAMES.filter(function(n) { return assigned.indexOf(n) < 0; });
+    var draftComplete = mockState.currentPick >= 12;
+
+    // Status
+    var statusEl = document.getElementById('mockDraftStatus');
+    if (draftComplete) {
+      statusEl.innerHTML = 'Draft Complete!';
+      statusEl.style.color = 'var(--gold)';
+    } else {
+      var team = SNAKE_ORDER[mockState.currentPick];
+      var round = Math.floor(mockState.currentPick / 2) + 1;
+      statusEl.innerHTML = 'Round ' + round + ' &mdash; Team ' + (team === 'A' ? '1' : '2') + ' picks';
+      statusEl.style.color = team === 'A' ? 'var(--green)' : 'var(--gold-dark, #b8962e)';
+    }
+
+    // Team columns
+    renderMockTeamCol('mockTeamA', mockState.teamA, 'var(--green)');
+    renderMockTeamCol('mockTeamB', mockState.teamB, 'var(--gold)');
+
+    // Available pool
+    var poolEl = document.getElementById('mockPool');
+    if (draftComplete) {
+      poolEl.innerHTML = '';
+    } else {
+      var currentTeam = SNAKE_ORDER[mockState.currentPick];
+      var teamColor = currentTeam === 'A' ? 'var(--green)' : 'var(--gold)';
+      var poolHtml = '<div style="width:100%;text-align:center;font-size:0.78em;font-weight:700;color:#999;margin-bottom:4px;">Click to draft &darr;</div>';
+      available.forEach(function(name) {
+        var p = PMAP[name];
+        var safeName = name.replace(/'/g, "\\'");
+        poolHtml += '<div onclick="mockDraftPick(\'' + safeName + '\')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:56px;padding:6px 4px;border-radius:10px;border:2px solid ' + teamColor + ';background:rgba(255,255,255,0.9);transition:transform 0.15s;" onmouseover="this.style.transform=\'scale(1.08)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
+          '<img src="' + p.face + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">' +
+          '<span style="font-size:0.7em;font-weight:600;text-align:center;line-height:1.1;margin-top:3px;">' + p.short + '</span>' +
+          '<span style="font-size:0.62em;color:#888;">' + p.hcp.toFixed(1) + '</span></div>';
+      });
+      poolEl.innerHTML = poolHtml;
+    }
+
+    // Draft log
+    var logEl = document.getElementById('mockDraftLog');
+    logEl.innerHTML = mockState.log.slice().reverse().join('<br>');
+
+    // Results when complete
+    if (draftComplete) {
+      renderMockResults();
+    }
+  }
+
+  function renderMockTeamCol(elId, roster, color) {
+    var el = document.getElementById(elId);
+    var html = '';
+    var totalHcp = 0;
+    roster.forEach(function(name, idx) {
+      var p = PMAP[name];
+      if (!p) return;
+      totalHcp += p.hcp;
+      html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;margin-bottom:3px;border-radius:8px;background:' + (idx === 0 ? 'rgba(201,168,76,0.12)' : 'transparent') + ';">';
+      html += '<img src="' + p.face + '" style="width:26px;height:26px;border-radius:50%;object-fit:cover;">';
+      html += '<span style="font-size:0.82em;font-weight:' + (idx === 0 ? '800' : '600') + ';">' + p.short + '</span>';
+      html += '<span style="font-size:0.72em;color:#888;margin-left:auto;">' + p.hcp.toFixed(1) + '</span>';
+      if (idx === 0) html += '<span style="font-size:0.58em;font-weight:800;color:var(--gold);margin-left:4px;">C</span>';
+      html += '</div>';
+    });
+    if (roster.length > 0) {
+      html += '<div style="font-size:0.72em;color:#888;text-align:center;margin-top:4px;border-top:1px solid #eee;padding-top:4px;">Combined: ' + totalHcp.toFixed(1) + ' | Avg: ' + (totalHcp / roster.length).toFixed(1) + '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderMockResults() {
+    var resultsEl = document.getElementById('mockDraftResults');
+    resultsEl.style.display = 'block';
+
+    var hcpA = 0, hcpB = 0;
+    mockState.teamA.forEach(function(n) { if (PMAP[n]) hcpA += PMAP[n].hcp; });
+    mockState.teamB.forEach(function(n) { if (PMAP[n]) hcpB += PMAP[n].hcp; });
+
+    var html = '<div style="border-top:2px solid var(--gold);padding-top:12px;">';
+    html += '<div style="text-align:center;font-weight:800;font-size:1em;margin-bottom:12px;">Draft Analysis</div>';
+
+    // Team comparison
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;text-align:center;">';
+    html += '<div style="padding:10px;border-radius:8px;background:rgba(74,138,58,0.08);border:1px solid rgba(74,138,58,0.2);">';
+    html += '<div style="font-weight:700;color:var(--green);">Team 1</div>';
+    html += '<div style="font-size:0.82em;">Combined: ' + hcpA.toFixed(1) + '</div>';
+    html += '<div style="font-size:0.82em;">Avg: ' + (hcpA / 6).toFixed(1) + '</div></div>';
+    html += '<div style="padding:10px;border-radius:8px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);">';
+    html += '<div style="font-weight:700;color:var(--gold-dark, #b8962e);">Team 2</div>';
+    html += '<div style="font-size:0.82em;">Combined: ' + hcpB.toFixed(1) + '</div>';
+    html += '<div style="font-size:0.82em;">Avg: ' + (hcpB / 6).toFixed(1) + '</div></div>';
+    html += '</div>';
+
+    // Session-by-session preview odds (auto-pair by roster order for preview)
+    html += '<div style="font-size:0.82em;color:#888;text-align:center;margin-bottom:8px;">Auto-paired preview (roster order):</div>';
+    SESSIONS.forEach(function(s) {
+      html += '<div style="margin-bottom:6px;padding:6px 10px;background:var(--sand);border-radius:8px;">';
+      html += '<div style="font-weight:700;font-size:0.78em;color:var(--green-dark);margin-bottom:4px;">' + s.label + ' &mdash; ' + s.course + ' (' + s.format + ')</div>';
+      if (s.type === '2v2') {
+        // 3 pairings of 2v2
+        for (var t = 0; t < 3; t++) {
+          var a1 = mockState.teamA[t * 2] || '';
+          var a2 = mockState.teamA[t * 2 + 1] || '';
+          var b1 = mockState.teamB[t * 2] || '';
+          var b2 = mockState.teamB[t * 2 + 1] || '';
+          if (a1 && a2 && b1 && b2) {
+            var pA1 = PMAP[a1], pA2 = PMAP[a2], pB1 = PMAP[b1], pB2 = PMAP[b2];
+            var prob;
+            if (s.format === 'Best Ball') {
+              var effA = oddsBBEff(pA1.hcp, pA2.hcp);
+              var effB = oddsBBEff(pB1.hcp, pB2.hcp);
+              prob = oddsWinProb(effA, effB, 0.12);
+            } else {
+              prob = oddsWinProb(pA1.hcp + pA2.hcp, pB1.hcp + pB2.hcp, 0.09);
+            }
+            html += '<div style="font-size:0.78em;display:flex;justify-content:space-between;padding:2px 0;">';
+            html += '<span>' + pA1.short + ' & ' + pA2.short + '</span>';
+            html += '<span style="font-weight:700;color:' + (prob >= 0.5 ? 'var(--green)' : 'var(--red, #c62828)') + ';">' + oddsML(prob) + '</span>';
+            html += '<span>vs</span>';
+            html += '<span style="font-weight:700;color:' + (prob < 0.5 ? 'var(--green)' : 'var(--red, #c62828)') + ';">' + oddsML(1 - prob) + '</span>';
+            html += '<span>' + pB1.short + ' & ' + pB2.short + '</span>';
+            html += '</div>';
+          }
+        }
+      } else {
+        // Singles: 6 matches
+        for (var t = 0; t < 6; t++) {
+          var a = mockState.teamA[t] || '';
+          var b = mockState.teamB[t] || '';
+          if (a && b) {
+            var pA = PMAP[a], pB = PMAP[b];
+            var prob = oddsWinProb(pA.hcp, pB.hcp, 0.17);
+            html += '<div style="font-size:0.78em;display:flex;justify-content:space-between;padding:2px 0;">';
+            html += '<span>' + pA.short + '</span>';
+            html += '<span style="font-weight:700;color:' + (prob >= 0.5 ? 'var(--green)' : 'var(--red, #c62828)') + ';">' + oddsML(prob) + '</span>';
+            html += '<span>vs</span>';
+            html += '<span style="font-weight:700;color:' + (prob < 0.5 ? 'var(--green)' : 'var(--red, #c62828)') + ';">' + oddsML(1 - prob) + '</span>';
+            html += '<span>' + pB.short + '</span>';
+            html += '</div>';
+          }
+        }
+      }
+      html += '</div>';
+    });
+
+    html += '</div>';
+    resultsEl.innerHTML = html;
+  }
 
   // ---- PLAYER BRIEF: Click on face cards in tournament ----
   document.getElementById('page-tournament').addEventListener('click', function(e) {
