@@ -1074,6 +1074,7 @@
   <div class="card" style="order: 1;">
     <div class="card-header">The Roster &amp; Handicaps</div>
     <div class="card-body">
+      <div style="text-align:center;font-size:0.8em;color:#888;margin-bottom:8px;font-style:italic;">Click/Tap a player to view Player Brief</div>
       <table>
         <thead><tr><th>#</th><th>Player</th><th>Handicap</th><th>Source</th></tr></thead>
         <tbody>
@@ -1957,6 +1958,7 @@
   <div class="card">
     <div class="card-header blue">The Bandon Bandit Cup &mdash; 6v6 Team Match</div>
     <div class="card-body" style="text-align: center;">
+      <div style="font-size:0.8em;color:#888;margin-bottom:8px;font-style:italic;">Click/Tap a player to view Player Brief</div>
 
       <!-- DRAFT ANNOUNCEMENT (shown when no teams set) -->
       <div id="draftAnnouncement" style="background: linear-gradient(135deg, #e8dfc8, #f0e8d0); border: 2px solid var(--gold); border-radius: 10px; padding: 18px 24px; margin-bottom: 24px; text-align: center;">
@@ -3914,18 +3916,18 @@ function showPage(pageId) {
   // Build player data from the tournament PLAYERS array (3rd script block)
   // We need name, hcp, face for all 12 players
   var PB_PLAYERS = [
-    {name:'Alec Bove',     hcp:4.3,  face:'Faces/Alec_B_face.jpg',     short:'Alec B'},
-    {name:'Ben Harrison',  hcp:13.7, face:'Faces/Ben_H_face.jpg',      short:'Ben H'},
-    {name:'Brady Gayle',   hcp:11.7, face:'Faces/Brady_G_face.jpg',    short:'Brady G'},
-    {name:'Cain Cody',     hcp:16.1, face:'Faces/Cain_C_face.jpg',     short:'Cain C'},
-    {name:'Camden Cooper', hcp:8.0,  face:'Faces/Camden_C_face.jpg',   short:'Camden C'},
-    {name:'Collin Horner', hcp:2.3,  face:'Faces/Collin_H_face.jpg',   short:'Collin H'},
-    {name:'Harrison Hancock',hcp:16.8,face:'Faces/Harrison_H_face.jpg',short:'Harrison H'},
-    {name:'John Armes',    hcp:3.6,  face:'Faces/John_A_face.jpg',     short:'John A'},
-    {name:'John Gressett', hcp:14.1, face:'Faces/John_G_face.jpg',     short:'John G'},
-    {name:'Josh John',     hcp:15.0, face:'Faces/Josh_J_face.jpg',     short:'Josh J'},
-    {name:'Stephen Wheatcroft',hcp:15.0,face:'Faces/Stephen_W_face.jpg',short:'Stephen W'},
-    {name:'Will Hayward',  hcp:11.7, face:'Faces/Will_H_face.jpg',     short:'Will H'}
+    {name:'Alec Bove',     hcp:4.3,  face:'Faces/Alec_B_face.jpg',     short:'Alec B',     blurb:''},
+    {name:'Ben Harrison',  hcp:13.7, face:'Faces/Ben_H_face.jpg',      short:'Ben H',      blurb:''},
+    {name:'Brady Gayle',   hcp:11.7, face:'Faces/Brady_G_face.jpg',    short:'Brady G',    blurb:''},
+    {name:'Cain Cody',     hcp:16.1, face:'Faces/Cain_C_face.jpg',     short:'Cain C',     blurb:''},
+    {name:'Camden Cooper', hcp:8.0,  face:'Faces/Camden_C_face.jpg',   short:'Camden C',   blurb:''},
+    {name:'Collin Horner', hcp:2.3,  face:'Faces/Collin_H_face.jpg',   short:'Collin H',   blurb:''},
+    {name:'Harrison Hancock',hcp:16.8,face:'Faces/Harrison_H_face.jpg',short:'Harrison H', blurb:''},
+    {name:'John Armes',    hcp:3.6,  face:'Faces/John_A_face.jpg',     short:'John A',     blurb:''},
+    {name:'John Gressett', hcp:14.1, face:'Faces/John_G_face.jpg',     short:'John G',     blurb:''},
+    {name:'Josh John',     hcp:15.0, face:'Faces/Josh_J_face.jpg',     short:'Josh J',     blurb:''},
+    {name:'Stephen Wheatcroft',hcp:15.0,face:'Faces/Stephen_W_face.jpg',short:'Stephen W', blurb:''},
+    {name:'Will Hayward',  hcp:11.7, face:'Faces/Will_H_face.jpg',     short:'Will H',     blurb:''}
   ];
   var PB_MAP = {};
   PB_PLAYERS.forEach(function(p) { PB_MAP[p.name] = p; });
@@ -3945,6 +3947,14 @@ function showPage(pageId) {
     if (p <= 0.005) return '+MAX';
     if (p >= 0.5) return '-' + Math.round(p / (1 - p) * 100);
     return '+' + Math.round((1 - p) / p * 100);
+  }
+
+  function pbSpread(p) {
+    // Convert win probability to approximate holes spread over 18
+    var edge = Math.abs(p - 0.5) * 6;
+    if (edge < 0.1) return 'EVEN';
+    var sign = p >= 0.5 ? '-' : '+';
+    return sign + edge.toFixed(1);
   }
 
   function pbBarColor(prob) {
@@ -3985,15 +3995,21 @@ function showPage(pageId) {
       '<div class="pb-info">' +
         '<h2>' + name + '</h2>' +
         '<div class="pb-hcp">Handicap: ' + hcp.toFixed(1) + '</div>' +
-        '<div class="pb-subtitle">Player Matchup Brief</div>' +
+        '<div class="pb-subtitle">Player Brief</div>' +
       '</div>';
+
+    // --- BLURB ---
+    var blurbHtml = '';
+    if (p.blurb) {
+      blurbHtml = '<div style="background:var(--sand);border-left:3px solid var(--gold);padding:10px 14px;margin-bottom:16px;font-size:0.9em;color:var(--text);border-radius:0 8px 8px 0;font-style:italic;">' + p.blurb + '</div>';
+    }
 
     // --- COMPUTE ALL ODDS ---
     // Singles
     var singles = [];
     others.forEach(function(opp) {
       var prob = pbWinProb(hcp, PB_MAP[opp].hcp, PB_K_SINGLES);
-      singles.push({opp: opp, prob: prob, ml: pbMoneyline(prob)});
+      singles.push({opp: opp, prob: prob, ml: pbMoneyline(prob), spread: pbSpread(prob)});
     });
     singles.sort(function(a, b) { return b.prob - a.prob; });
 
@@ -4001,48 +4017,32 @@ function showPage(pageId) {
 
     // 2v2 analysis
     var bbDog = 0, csDog = 0, bbTotal = 0, csTotal = 0;
-    var bestPartnerBB = null, bestPartnerCS = null;
-    var worstMatchups = [];
 
     others.forEach(function(partner) {
       var remaining = others.filter(function(n) { return n !== partner; });
       var oppPairs = pbCombos2(remaining);
-      var bbSum = 0, csSum = 0;
 
       oppPairs.forEach(function(opp) {
         var effUs = pbBBEff(hcp, PB_MAP[partner].hcp);
         var effThem = pbBBEff(PB_MAP[opp[0]].hcp, PB_MAP[opp[1]].hcp);
         var pBB = pbWinProb(effUs, effThem, PB_K_BESTBALL);
-        bbSum += pBB;
         bbTotal++;
         if (pBB < 0.5) bbDog++;
 
         var sumUs = hcp + PB_MAP[partner].hcp;
         var sumThem = PB_MAP[opp[0]].hcp + PB_MAP[opp[1]].hcp;
         var pCS = pbWinProb(sumUs, sumThem, PB_K_COMBINED);
-        csSum += pCS;
         csTotal++;
         if (pCS < 0.5) csDog++;
-
-        // Track worst
-        if (pBB < 0.5) worstMatchups.push({fmt:'BB', partner:partner, opp:opp, prob:pBB});
-        if (pCS < 0.5) worstMatchups.push({fmt:'CS', partner:partner, opp:opp, prob:pCS});
       });
-
-      var bbAvg = bbSum / oppPairs.length;
-      var csAvg = csSum / oppPairs.length;
-      if (!bestPartnerBB || bbAvg > bestPartnerBB.avg) bestPartnerBB = {name: partner, avg: bbAvg};
-      if (!bestPartnerCS || csAvg > bestPartnerCS.avg) bestPartnerCS = {name: partner, avg: csAvg};
     });
-
-    worstMatchups.sort(function(a, b) { return a.prob - b.prob; });
 
     var totalMatchups = 11 + bbTotal + csTotal;
     var totalDog = sDog + bbDog + csDog;
     var dogPct = (totalDog / totalMatchups * 100).toFixed(1);
 
     // --- BUILD BODY HTML ---
-    var html = '';
+    var html = blurbHtml;
 
     // Stats row
     html += '<div class="pb-stats">';
@@ -4053,7 +4053,7 @@ function showPage(pageId) {
 
     // Singles table
     html += '<div class="pb-section"><h3>Singles Matchups</h3>';
-    html += '<table class="pb-table"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>Moneyline</th></tr></thead><tbody>';
+    html += '<table class="pb-table"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th>Spread</th></tr></thead><tbody>';
     singles.forEach(function(s) {
       var op = PB_MAP[s.opp];
       var pct = (s.prob * 100).toFixed(1);
@@ -4065,55 +4065,10 @@ function showPage(pageId) {
         '<td>' + op.hcp.toFixed(1) + '</td>' +
         '<td style="font-weight:700;">' + pct + '%</td>' +
         '<td><div class="pb-bar"><div class="pb-bar-fill" style="width:' + barW + '%;background:' + pbBarColor(s.prob) + ';"></div></div></td>' +
-        '<td class="' + mlClass + '">' + s.ml + '</td></tr>';
+        '<td class="' + mlClass + '">' + s.ml + '</td>' +
+        '<td style="font-size:0.85em;color:#666;">' + s.spread + '</td></tr>';
     });
     html += '</tbody></table></div>';
-
-    // Best partners
-    html += '<div class="pb-section"><h3>Best Partner</h3>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
-    // BB
-    var bbP = PB_MAP[bestPartnerBB.name];
-    html += '<div style="background:var(--sand);border-radius:10px;padding:12px;border-left:3px solid var(--gold);">' +
-      '<div style="font-size:0.75em;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Best Ball</div>' +
-      '<div class="pb-clickable" onclick="openPlayerBrief(\'' + bestPartnerBB.name.replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:8px;">' +
-      '<img src="' + bbP.face + '" class="pb-partner-face">' +
-      '<div><strong>' + bbP.short + '</strong><div style="font-size:0.8em;color:#888;">Avg win: ' + (bestPartnerBB.avg * 100).toFixed(1) + '%</div></div>' +
-      '</div></div>';
-    // CS
-    var csP = PB_MAP[bestPartnerCS.name];
-    html += '<div style="background:var(--sand);border-radius:10px;padding:12px;border-left:3px solid var(--blue);">' +
-      '<div style="font-size:0.75em;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Combined Score</div>' +
-      '<div class="pb-clickable" onclick="openPlayerBrief(\'' + bestPartnerCS.name.replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:8px;">' +
-      '<img src="' + csP.face + '" class="pb-partner-face">' +
-      '<div><strong>' + csP.short + '</strong><div style="font-size:0.8em;color:#888;">Avg win: ' + (bestPartnerCS.avg * 100).toFixed(1) + '%</div></div>' +
-      '</div></div>';
-    html += '</div></div>';
-
-    // Worst matchups (top 5)
-    if (worstMatchups.length > 0) {
-      html += '<div class="pb-section"><h3>Toughest Matchups</h3>';
-      var shown = Math.min(6, worstMatchups.length);
-      for (var i = 0; i < shown; i++) {
-        var w = worstMatchups[i];
-        var fmtLabel = w.fmt === 'BB' ? 'Best Ball' : 'Combined';
-        var pct = (w.prob * 100).toFixed(1);
-        var wPartner = PB_MAP[w.partner];
-        var wOpp0 = PB_MAP[w.opp[0]];
-        var wOpp1 = PB_MAP[w.opp[1]];
-        html += '<div class="pb-worst-row">' +
-          '<span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:0.72em;font-weight:700;background:' +
-          (w.fmt === 'BB' ? 'var(--gold);color:var(--green-dark)' : 'var(--blue);color:white') + ';">' + fmtLabel + '</span> ' +
-          'w/ <strong>' + wPartner.short + '</strong> vs <strong>' + wOpp0.short + ' + ' + wOpp1.short + '</strong> &mdash; ' +
-          '<span class="pb-ml-dog">' + pct + '% (' + pbMoneyline(w.prob) + ')</span></div>';
-      }
-      if (worstMatchups.length > shown) {
-        html += '<div style="font-size:0.8em;color:#999;padding-top:4px;">+ ' + (worstMatchups.length - shown) + ' more underdog matchups</div>';
-      }
-      html += '</div>';
-    } else {
-      html += '<div class="pb-section"><h3>Toughest Matchups</h3><div style="color:#888;font-size:0.9em;">No underdog matchups in any format.</div></div>';
-    }
 
     document.getElementById('playerBriefBody').innerHTML = html;
     document.getElementById('playerBriefModal').classList.add('active');
