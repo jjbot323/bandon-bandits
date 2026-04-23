@@ -982,6 +982,7 @@
     .pb-nav { width: 30px; height: 30px; font-size: 1em; }
     .pb-nav-right { right: 44px; }
     .modal-body { padding: 16px; }
+    .pb-scroll-hint { display: block !important; }
   }
   :root[data-theme="dark"] .draft-pool { background: #252538; border-color: #444; }
   :root[data-theme="dark"] .draft-team-col { border-color: #444; }
@@ -4172,6 +4173,7 @@ function showPage(pageId) {
 
     // Singles table
     html += '<div class="pb-section"><h3>Head to Head</h3>';
+    html += '<div class="pb-scroll-hint" style="text-align:center;font-size:0.75em;color:#aaa;margin-bottom:4px;display:none;">Scroll right for full odds &rarr;</div>';
     html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
     html += '<table class="pb-table" style="min-width:500px;"><thead><tr><th></th><th>Opponent</th><th>HCP</th><th>Win %</th><th style=\"min-width:70px\"></th><th>ML</th><th title="Expected holes up/down">Spread (Holes)</th></tr></thead><tbody>';
     singles.forEach(function(s) {
