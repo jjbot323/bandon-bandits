@@ -3650,6 +3650,72 @@ function showPage(pageId) {
     renderTournament();
   };
 
+  // ---- ODDS HELPERS ----
+  function oddsWinProb(hcpA, hcpB, K) {
+    return 1.0 / (1.0 + Math.exp(K * (hcpA - hcpB) * 3.5));
+  }
+  function oddsBBEff(h1, h2) {
+    return Math.min(h1, h2) * 0.70 + Math.max(h1, h2) * 0.30;
+  }
+  function oddsML(p) {
+    if (p >= 0.995) return '-MAX';
+    if (p <= 0.005) return '+MAX';
+    if (p >= 0.5) return '-' + Math.round(p / (1 - p) * 100);
+    return '+' + Math.round((1 - p) / p * 100);
+  }
+  function oddsSpread(hcpA, hcpB) {
+    var diff = hcpA - hcpB;
+    var holes = Math.min(10, Math.abs(diff) * 0.55);
+    if (holes < 0.3) return 'EVEN';
+    return (diff <= 0 ? '-' : '+') + holes.toFixed(1);
+  }
+  function oddsSpreadTeam(effA, effB) {
+    var diff = effA - effB;
+    var holes = Math.min(10, Math.abs(diff) * 0.55);
+    if (holes < 0.3) return 'EVEN';
+    return (diff <= 0 ? '-' : '+') + holes.toFixed(1);
+  }
+  function renderOddsRow(aNames, bNames, format) {
+    // aNames/bNames: arrays of player names (1 for singles, 2 for 2v2)
+    var aValid = aNames.filter(function(n) { return n && PMAP[n]; });
+    var bValid = bNames.filter(function(n) { return n && PMAP[n]; });
+    if (aValid.length === 0 || bValid.length === 0) return '';
+    if (format === 'Singles') {
+      if (aValid.length < 1 || bValid.length < 1) return '';
+      var hA = PMAP[aValid[0]].hcp, hB = PMAP[bValid[0]].hcp;
+      var prob = oddsWinProb(hA, hB, 0.17);
+      var mlA = oddsML(prob), mlB = oddsML(1 - prob);
+      var sprA = oddsSpread(hA, hB), sprB = oddsSpread(hB, hA);
+      return '<div style="display:grid;grid-template-columns:60px 1fr 40px 1fr;gap:8px;text-align:center;font-size:0.72em;padding:0 0 6px;color:#888;margin-top:-6px;">' +
+        '<div></div>' +
+        '<div><span style="font-weight:700;color:' + (prob >= 0.5 ? 'var(--green)' : 'var(--red)') + ';">' + mlA + '</span> <span>(' + sprA + ')</span></div>' +
+        '<div></div>' +
+        '<div><span style="font-weight:700;color:' + (prob < 0.5 ? 'var(--green)' : 'var(--red)') + ';">' + mlB + '</span> <span>(' + sprB + ')</span></div>' +
+        '</div>';
+    } else {
+      // 2v2
+      if (aValid.length < 2 || bValid.length < 2) return '';
+      var hA1 = PMAP[aValid[0]].hcp, hA2 = PMAP[aValid[1]].hcp;
+      var hB1 = PMAP[bValid[0]].hcp, hB2 = PMAP[bValid[1]].hcp;
+      var prob, effA, effB;
+      if (format === 'Best Ball') {
+        effA = oddsBBEff(hA1, hA2); effB = oddsBBEff(hB1, hB2);
+        prob = oddsWinProb(effA, effB, 0.12);
+      } else {
+        effA = hA1 + hA2; effB = hB1 + hB2;
+        prob = oddsWinProb(effA, effB, 0.09);
+      }
+      var mlA = oddsML(prob), mlB = oddsML(1 - prob);
+      var sprA = oddsSpreadTeam(effA, effB), sprB = oddsSpreadTeam(effB, effA);
+      return '<div style="display:grid;grid-template-columns:60px 1fr 40px 1fr;gap:8px;text-align:center;font-size:0.72em;padding:0 0 6px;color:#888;margin-top:-6px;">' +
+        '<div></div>' +
+        '<div><span style="font-weight:700;color:' + (prob >= 0.5 ? 'var(--green)' : 'var(--red)') + ';">' + mlA + '</span> <span>(' + sprA + ')</span></div>' +
+        '<div></div>' +
+        '<div><span style="font-weight:700;color:' + (prob < 0.5 ? 'var(--green)' : 'var(--red)') + ';">' + mlB + '</span> <span>(' + sprB + ')</span></div>' +
+        '</div>';
+    }
+  }
+
   // ---- RENDER: SESSIONS ----
   function renderAllSessions() {
     var container = document.getElementById('tournamentPairings');
@@ -3711,6 +3777,7 @@ function showPage(pageId) {
         }
         html += '</div>';
         html += '</div>';
+        html += renderOddsRow(aPlayers, bPlayers, s.format);
       });
     } else {
       // Singles: 2 matches per tee time
@@ -3733,6 +3800,7 @@ function showPage(pageId) {
         html += renderPlayerSlot(s.key, teeKey, 'B', 0, bPlayers[0], tB);
         html += '</div>';
         html += '</div>';
+        html += renderOddsRow([aPlayers[0]], [bPlayers[0]], 'Singles');
 
         // Match 2
         html += '<div class="pairing-row">';
@@ -3745,6 +3813,7 @@ function showPage(pageId) {
         html += renderPlayerSlot(s.key, teeKey, 'B', 1, bPlayers[1], tB);
         html += '</div>';
         html += '</div>';
+        html += renderOddsRow([aPlayers[1]], [bPlayers[1]], 'Singles');
       });
     }
 
