@@ -4163,8 +4163,8 @@ function showPage(pageId) {
     log: []
   };
 
-  // Snake draft order for 12 picks (6 per team): A,B,B,A,A,B,B,A,A,B,B,A
-  var SNAKE_ORDER = ['A','B','B','A','A','B','B','A','A','B','B','A'];
+  // Snake draft order for 10 picks after captains (5 per team): B,A,A,B,B,A,A,B,B,A
+  var SNAKE_ORDER = ['B','A','A','B','B','A','A','B','B','A'];
 
   window.openMockDraftModal = function() {
     populateMockCaptains();
@@ -4205,10 +4205,10 @@ function showPage(pageId) {
     mockState.captainB = capB;
     mockState.teamA = [capA];
     mockState.teamB = [capB];
-    mockState.currentPick = 2; // Captains take picks 0 and 1
+    mockState.currentPick = 0;
     mockState.log = [
-      'Rd 1, Pick 1: ' + PMAP[capA].short + ' &rarr; Team 1 (Captain)',
-      'Rd 1, Pick 2: ' + PMAP[capB].short + ' &rarr; Team 2 (Captain)'
+      'Rd 1: ' + PMAP[capA].short + ' &rarr; Team 1 (Captain)',
+      'Rd 1: ' + PMAP[capB].short + ' &rarr; Team 2 (Captain)'
     ];
     document.getElementById('mockDraftSetup').style.display = 'none';
     document.getElementById('mockDraftBoard').style.display = 'block';
@@ -4230,16 +4230,17 @@ function showPage(pageId) {
 
   window.mockDraftPick = function(name) {
     if (!mockState.active) return;
-    if (mockState.currentPick >= 12) return;
+    if (mockState.currentPick >= 10) return; // 10 remaining picks after captains
     var team = SNAKE_ORDER[mockState.currentPick];
     if (team === 'A') {
       mockState.teamA.push(name);
     } else {
       mockState.teamB.push(name);
     }
-    var round = Math.floor(mockState.currentPick / 2) + 1;
+    var round = Math.floor(mockState.currentPick / 2) + 2; // +2 because round 1 is captains
     var pickInRound = (mockState.currentPick % 2) + 1;
-    mockState.log.push('Rd ' + round + ', Pick ' + pickInRound + ': ' + PMAP[name].short + ' &rarr; Team ' + (team === 'A' ? '1' : '2'));
+    var captainName = team === 'A' ? PMAP[mockState.captainA].short : PMAP[mockState.captainB].short;
+    mockState.log.push('Rd ' + round + ', ' + captainName + ' picks: ' + PMAP[name].short + ' &rarr; Team ' + (team === 'A' ? '1' : '2'));
     mockState.currentPick++;
     renderMockDraft();
   };
@@ -4247,7 +4248,7 @@ function showPage(pageId) {
   function renderMockDraft() {
     var assigned = mockState.teamA.concat(mockState.teamB);
     var available = PNAMES.filter(function(n) { return assigned.indexOf(n) < 0; });
-    var draftComplete = mockState.currentPick >= 12;
+    var draftComplete = mockState.currentPick >= 10;
 
     // Status
     var statusEl = document.getElementById('mockDraftStatus');
@@ -4256,8 +4257,9 @@ function showPage(pageId) {
       statusEl.style.color = 'var(--gold)';
     } else {
       var team = SNAKE_ORDER[mockState.currentPick];
-      var round = Math.floor(mockState.currentPick / 2) + 1;
-      statusEl.innerHTML = 'Round ' + round + ' &mdash; Team ' + (team === 'A' ? '1' : '2') + ' picks';
+      var round = Math.floor(mockState.currentPick / 2) + 2;
+      var captainName = team === 'A' ? PMAP[mockState.captainA].short : PMAP[mockState.captainB].short;
+      statusEl.innerHTML = 'Round ' + round + ' &mdash; ' + captainName + ' picks';
       statusEl.style.color = team === 'A' ? 'var(--green)' : 'var(--gold-dark, #b8962e)';
     }
 
