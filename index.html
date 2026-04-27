@@ -2351,14 +2351,14 @@
         <div id="mockDraftStatus" style="text-align:center;font-weight:700;font-size:1em;margin-bottom:12px;color:var(--green-dark);"></div>
         <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-bottom:16px;">
           <div>
-            <div style="font-weight:700;text-align:center;margin-bottom:6px;color:var(--green);">Team 1</div>
+            <div style="font-weight:700;text-align:center;margin-bottom:6px;color:var(--green);">Team Hancock</div>
             <div id="mockTeamA" style="min-height:60px;"></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
             <div style="font-size:0.72em;color:#999;font-weight:700;">VS</div>
           </div>
           <div>
-            <div style="font-weight:700;text-align:center;margin-bottom:6px;color:var(--gold);">Team 2</div>
+            <div style="font-weight:700;text-align:center;margin-bottom:6px;color:var(--gold);">Team Draino</div>
             <div id="mockTeamB" style="min-height:60px;"></div>
           </div>
         </div>
@@ -3657,7 +3657,7 @@ function showPage(pageId) {
     // Team A
     var hcpA = teamHcp(tA);
     html += '<div class="card"><div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">';
-    html += '<span>Team 1</span>';
+    html += '<span>Team Hancock</span>';
     if (tA.length > 0) html += '<span style="font-size:0.78em;opacity:0.85;">Combined: ' + hcpA.toFixed(1) + ' &bull; Avg: ' + (hcpA / tA.length).toFixed(1) + '</span>';
     html += '</div><div class="card-body">';
 
@@ -3675,7 +3675,7 @@ function showPage(pageId) {
     // Team B
     var hcpB = teamHcp(tB);
     html += '<div class="card"><div class="card-header gold" style="display:flex;justify-content:space-between;align-items:center;">';
-    html += '<span>Team 2</span>';
+    html += '<span>Team Draino</span>';
     if (tB.length > 0) html += '<span style="font-size:0.78em;opacity:0.85;">Combined: ' + hcpB.toFixed(1) + ' &bull; Avg: ' + (hcpB / tB.length).toFixed(1) + '</span>';
     html += '</div><div class="card-body">';
 
@@ -3858,8 +3858,8 @@ function showPage(pageId) {
     html += '<div class="card-body">';
 
     // Available player pools
-    var poolA = renderSessionPool(s.key, tA, 'A', 'Team 1');
-    var poolB = renderSessionPool(s.key, tB, 'B', 'Team 2');
+    var poolA = renderSessionPool(s.key, tA, 'A', 'Team Hancock');
+    var poolB = renderSessionPool(s.key, tB, 'B', 'Team Draino');
     if (poolA || poolB) {
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:8px;background:var(--sand);border-radius:8px;">';
       html += '<div>' + poolA + '</div>';
@@ -4197,8 +4197,8 @@ function showPage(pageId) {
     mockState.teamB = [capB];
     mockState.currentPick = 0;
     mockState.log = [
-      'Rd 1: ' + PMAP[capA].short + ' &rarr; Team 1 (Captain)',
-      'Rd 1: ' + PMAP[capB].short + ' &rarr; Team 2 (Captain)'
+      'Rd 1: ' + PMAP[capA].short + ' &rarr; Team Hancock (Captain)',
+      'Rd 1: ' + PMAP[capB].short + ' &rarr; Team Draino (Captain)'
     ];
     document.getElementById('mockDraftSetup').style.display = 'none';
     document.getElementById('mockDraftBoard').style.display = 'block';
@@ -4321,11 +4321,11 @@ function showPage(pageId) {
     // Team comparison
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;text-align:center;">';
     html += '<div style="padding:10px;border-radius:8px;background:rgba(74,138,58,0.08);border:1px solid rgba(74,138,58,0.2);">';
-    html += '<div style="font-weight:700;color:var(--green);">Team 1</div>';
+    html += '<div style="font-weight:700;color:var(--green);">Team Hancock</div>';
     html += '<div style="font-size:0.82em;">Combined: ' + hcpA.toFixed(1) + '</div>';
     html += '<div style="font-size:0.82em;">Avg: ' + (hcpA / 6).toFixed(1) + '</div></div>';
     html += '<div style="padding:10px;border-radius:8px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);">';
-    html += '<div style="font-weight:700;color:var(--gold-dark, #b8962e);">Team 2</div>';
+    html += '<div style="font-weight:700;color:var(--gold-dark, #b8962e);">Team Draino</div>';
     html += '<div style="font-size:0.82em;">Combined: ' + hcpB.toFixed(1) + '</div>';
     html += '<div style="font-size:0.82em;">Avg: ' + (hcpB / 6).toFixed(1) + '</div></div>';
     html += '</div>';
