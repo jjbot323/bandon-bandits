@@ -3152,17 +3152,7 @@ function showPage(pageId) {
       html += '<td class="cost-col">' + (playerCost > 0 ? '$' + playerCost : '-') + '</td>';
       html += '</tr>';
     });
-    // Add summary row at bottom showing additional carry caddies needed per round
-    const MAX_CARRY = { rd1: 2, rd2: 4, rd3: 2, rd4: 4, rd5: 2, rd6: 4 };
-    let summaryRow = '<tr style="background:#fff8e1; font-weight:700; font-size:0.82em; border-top:2px solid var(--gold);"><td style="color:#e65100;">Extra Carry Needed</td>';
-    ROUNDS.forEach(r => {
-      const carryCount = PLAYERS.filter(p => data[p] && data[p][r] === 'carry').length;
-      const extra = Math.max(0, Math.ceil((carryCount - MAX_CARRY[r]) / 2));
-      const color = extra > 0 ? '#e65100' : '#4a8a3a';
-      summaryRow += '<td style="text-align:center; color:' + color + ';">' + extra + '</td>';
-    });
-    summaryRow += '<td></td></tr>';
-    tbody.innerHTML = html + summaryRow;
+    tbody.innerHTML = html;
   }
 
   // Caddie picks are locked for players — commissioner can still edit
