@@ -732,28 +732,28 @@
   .scoreboard {
     background: linear-gradient(135deg, var(--green-dark), var(--green));
     color: var(--white);
-    padding: 10px 20px;
+    padding: 8px 16px;
     display: flex; align-items: center; justify-content: center;
-    gap: 24px;
+    gap: 20px;
     border-bottom: 3px solid var(--gold);
     font-weight: 700;
-    position: relative; z-index: 10;
+    position: relative; z-index: 1;
+    width: 100%; box-sizing: border-box;
   }
   .scoreboard-team {
-    display: flex; align-items: center; gap: 12px;
-    font-size: 1em; letter-spacing: 0.8px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.95em; letter-spacing: 0.5px;
   }
   .scoreboard-score {
-    font-size: 2em; font-weight: 900; color: var(--gold);
-    min-width: 38px; text-align: center;
-    font-family: 'Segoe UI', monospace;
+    font-size: 1.6em; font-weight: 900; color: var(--gold);
+    min-width: 30px; text-align: center;
   }
-  .scoreboard-vs { font-size: 0.85em; opacity: 0.55; letter-spacing: 3px; font-weight: 800; }
+  .scoreboard-vs { font-size: 0.78em; opacity: 0.55; letter-spacing: 3px; font-weight: 800; }
   @media (max-width: 600px) {
-    .scoreboard { padding: 10px 12px; gap: 14px; }
-    .scoreboard-team { font-size: 0.85em; gap: 8px; }
-    .scoreboard-score { font-size: 1.5em; min-width: 28px; }
-    .scoreboard-vs { font-size: 0.7em; letter-spacing: 1.5px; }
+    .scoreboard { padding: 6px 10px; gap: 12px; }
+    .scoreboard-team { font-size: 0.78em; gap: 6px; }
+    .scoreboard-score { font-size: 1.2em; min-width: 24px; }
+    .scoreboard-vs { font-size: 0.65em; letter-spacing: 1.5px; }
   }
 
   /* Match result row */
@@ -4857,11 +4857,34 @@ function showPage(pageId) {
   } else {
     recalcTotals();
   }
-  // Watch for DOM changes in payment table (in case future commish-mode editing happens)
+  // Watch for DOM changes in PLAYER rows only (not the totals row itself, to avoid infinite loop)
   var totalsRow = document.getElementById('paymentsTotalsRow');
   if (totalsRow && window.MutationObserver) {
-    var observer = new MutationObserver(function() { recalcTotals(); });
-    observer.observe(totalsRow.parentElement, {childList:true, subtree:true, characterData:true});
+    var tbody = totalsRow.parentElement;
+    var isRecalcing = false;
+    var observer = new MutationObserver(function(mutations) {
+      if (isRecalcing) return;
+      // Only react to mutations NOT inside the totals row
+      var relevant = mutations.some(function(m) {
+        var node = m.target;
+        while (node && node !== tbody) {
+          if (node === totalsRow) return false;
+          node = node.parentNode;
+        }
+        return true;
+      });
+      if (!relevant) return;
+      isRecalcing = true;
+      recalcTotals();
+      // Use setTimeout to release the flag after the mutation queue settles
+      setTimeout(function() { isRecalcing = false; }, 0);
+    });
+    // Observe only player rows, not the totals row
+    Array.prototype.forEach.call(tbody.querySelectorAll('tr'), function(tr) {
+      if (tr !== totalsRow) {
+        observer.observe(tr, {childList:true, subtree:true, characterData:true});
+      }
+    });
   }
   // Expose for manual recalc
   window.__bandonRecalcPaymentsTotals = recalcTotals;
